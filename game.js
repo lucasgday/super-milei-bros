@@ -33,6 +33,7 @@
     patricia: new Image(),
     cristina: new Image(),
     enemies: new Image(),
+    crowd: new Image(),
   };
   sprites.heroes.src = './assets/heroes.png';
   sprites.javierAnimated.src = './assets/javier-animated.png';
@@ -40,12 +41,25 @@
   sprites.patricia.src = './assets/patricia.png';
   sprites.cristina.src = './assets/cristina.png';
   sprites.enemies.src = './assets/enemies.png';
+  sprites.crowd.src = './assets/piquetero-crowd.png';
+  const openingTrack = new Audio('./assets/unchained-destiny.mp3');
+  openingTrack.loop = true;
+  openingTrack.volume = 0;
   const soundtrack = new Audio('./assets/flesh-and-blood.mp3');
   soundtrack.loop = true;
-  soundtrack.volume = 0.34;
+  soundtrack.volume = 0;
+  const crowdTrack = new Audio('./assets/crowd-rock.mp3');
+  crowdTrack.loop = true;
+  crowdTrack.volume = 0;
   const bossTrack = new Audio('./assets/boss-battle.mp3');
   bossTrack.loop = true;
-  bossTrack.volume = 0.38;
+  bossTrack.volume = 0;
+  const musicTracks = [
+    { audio: openingTrack, volume: .35 },
+    { audio: soundtrack, volume: .34 },
+    { audio: crowdTrack, volume: .38 },
+    { audio: bossTrack, volume: .38 },
+  ];
 
   let W = 480;
   const H = 270;
@@ -98,6 +112,7 @@
   let conanCollected = false;
   let unlockedPatricia = false;
   let muted = false;
+  let crowdNearby = false;
   let portraitAllowed = false;
   let audio = null;
   let noiseBuffer = null;
@@ -143,6 +158,7 @@
     if (state !== 'playing' && state !== 'paused') return;
     setState(state === 'playing' ? 'paused' : 'playing');
     ui.pause.hidden = state !== 'paused';
+    if (state === 'playing') startMusic();
     syncMusic();
   }
 
@@ -238,12 +254,31 @@
     } catch { /* Sound is optional. */ }
   }
 
-  function syncMusic() {
-    const active = boss && boss.alive && player && player.x > 1390 ? bossTrack : soundtrack;
-    for (const track of [soundtrack, bossTrack]) {
-      if (!muted && state === 'playing' && track === active) {
-        if (track.paused) track.play().catch(() => {});
-      } else track.pause();
+  function startMusic() {
+    if (muted) return;
+    for (const { audio: track } of musicTracks) {
+      if (track.paused) track.play().catch(() => {});
+    }
+  }
+
+  function syncMusic(dt = 0) {
+    const distance = player ? Math.min(Infinity, ...enemies
+      .filter(enemy => enemy.alive && enemy.type === 'piquetero')
+      .map(enemy => Math.abs(enemy.x + enemy.w / 2 - player.x - player.w / 2))) : Infinity;
+    if (distance < 135) crowdNearby = true;
+    else if (distance > 190) crowdNearby = false;
+    let active = player && player.x > 860 ? soundtrack : openingTrack;
+    if (crowdNearby && player && player.x <= 1390) active = crowdTrack;
+    if (boss && boss.alive && player && player.x > 1390) active = bossTrack;
+    for (const { audio: track, volume } of musicTracks) {
+      if (muted || state !== 'playing') {
+        track.pause();
+        track.volume = 0;
+        continue;
+      }
+      const target = track === active ? volume : 0;
+      track.volume += (target - track.volume) * Math.min(1, dt * 4);
+      if (!target && track.volume < .01) track.volume = 0;
     }
   }
 
@@ -268,7 +303,7 @@
     player = { x: 35, y: 170, w: 14, h: 22, vx: 0, vy: 0, grounded: false, facing: 1, invulnerable: 0, attackCd: 0, attackPose: 0, stride: 0, checkpoint: 35 };
     companion = { x: 12, y: 170, vx: 0, stride: 0 };
     enemies = data.enemies.map(([type, x, y]) => ({
-      type, x, y, w: type === 'bill' ? 19 : 17, h: type === 'bill' ? 17 : 22,
+      type, x, y, w: type === 'piquetero' ? 48 : type === 'bill' ? 19 : 17, h: type === 'bill' ? 17 : 22,
       startX: x, startY: y, direction: -1, hp: type === 'piquetero' ? 3 : 2, alive: true, phase: Math.random() * 6,
     }));
     coins = data.coins.map(([x, y]) => ({ x, y, got: false }));
@@ -277,8 +312,11 @@
     effects = [];
     encountered = new Set();
     boss = { x: 1615, y: 168, w: 35, h: 60, hp: 14, maxHp: 14, shotCd: 1.5, invulnerable: 0, alive: true };
+    openingTrack.currentTime = 0;
     soundtrack.currentTime = 0;
+    crowdTrack.currentTime = 0;
     bossTrack.currentTime = 0;
+    crowdNearby = false;
     conanCollected = false;
     shieldTime = 0;
     abilityCd = 0;
@@ -309,6 +347,7 @@
   }
 
   function requestPlay() {
+    startMusic();
     if (!portraitAllowed && window.matchMedia('(orientation: portrait) and (max-width: 780px), (orientation: portrait) and (hover: none) and (pointer: coarse)').matches) {
       ui.rotate.hidden = false;
       ui.overlay.inert = true;
@@ -424,8 +463,8 @@
   function damageEnemy(enemy, amount) {
     enemy.hp -= amount;
     playSfx('hit');
-    spawnParticles(enemy.x + 8, enemy.y + 8, '#ffe2a3', 12);
-    effect('hit', enemy.x + 8, enemy.y + 9, 1, .22);
+    spawnParticles(enemy.x + enemy.w / 2, enemy.y + 8, '#ffe2a3', 12);
+    effect('hit', enemy.x + enemy.w / 2, enemy.y + 9, 1, .22);
     if (enemy.hp <= 0) {
       enemy.alive = false;
       score += enemy.type === 'bill' ? 180 : 120;
@@ -519,7 +558,7 @@
     companion.stride += Math.abs(companion.x - companionX) / 14;
     companion.y += (player.y - companion.y) * Math.min(1, dt * 9);
     cam = clamp(player.x - W * .32, 0, Math.max(0, WORLD - W));
-    syncMusic();
+    syncMusic(dt);
 
     for (const coin of coins) {
       if (coin.got) continue;
@@ -812,6 +851,14 @@
     if (!enemy.alive) return;
     const x = Math.round(enemy.x - cam);
     const y = Math.round(enemy.y);
+    if (enemy.type === 'piquetero' && sprites.crowd.complete && sprites.crowd.naturalWidth) {
+      ctx.save();
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(sprites.crowd, x + enemy.w / 2 - 35, y + enemy.h - 46 + Math.sin(enemy.phase * 8), 70, 46);
+      ctx.restore();
+      return;
+    }
     if (sprites.enemies.complete && sprites.enemies.naturalWidth) {
       const index = enemy.type === 'piquetero' ? 0 : enemy.type === 'bill' ? 1 : 2;
       const crops = [[35, 25, 500, 625], [555, 65, 840, 575], [1405, 55, 730, 605]];
@@ -1072,6 +1119,7 @@
   });
   ui.rotateBack.addEventListener('click', () => {
     closeRotatePrompt();
+    syncMusic();
     ui.play.focus();
   });
   window.addEventListener('resize', () => {
@@ -1084,6 +1132,7 @@
     ui.mute.setAttribute('aria-pressed', String(!muted));
     ui.mute.setAttribute('aria-label', muted ? 'Activar sonido' : 'Silenciar');
     ui.mute.textContent = muted ? '♪' : '♫';
+    if (!muted && state === 'playing') startMusic();
     syncMusic();
     playSfx('mute');
   });
