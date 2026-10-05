@@ -35,10 +35,10 @@
   sprites.enemies.src = './assets/enemies.png';
   const soundtrack = new Audio('./assets/flesh-and-blood.mp3');
   soundtrack.loop = true;
-  soundtrack.volume = 0.42;
+  soundtrack.volume = 0.34;
   const bossTrack = new Audio('./assets/boss-battle.mp3');
   bossTrack.loop = true;
-  bossTrack.volume = 0.46;
+  bossTrack.volume = 0.38;
 
   const W = 480;
   const H = 270;
@@ -90,6 +90,7 @@
   let unlockedPatricia = false;
   let muted = false;
   let audio = null;
+  let noiseBuffer = null;
   let lastFrame = performance.now();
   try { unlockedPatricia = localStorage.getItem('smb-patricia-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
 
@@ -101,20 +102,95 @@
     ...current().ledges.map(([x, y, w]) => ({ x, y, w, h: 12 })),
   ];
 
-  function sound(freq = 440, duration = 0.07, type = 'square') {
+  function playSfx(kind) {
     if (muted) return;
     try {
       audio ||= new (window.AudioContext || window.webkitAudioContext)();
       if (audio.state === 'suspended') audio.resume();
-      const oscillator = audio.createOscillator();
-      const gain = audio.createGain();
-      oscillator.type = type;
-      oscillator.frequency.setValueAtTime(freq, audio.currentTime);
-      gain.gain.setValueAtTime(0.035, audio.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + duration);
-      oscillator.connect(gain).connect(audio.destination);
-      oscillator.start();
-      oscillator.stop(audio.currentTime + duration);
+      const now = audio.currentTime;
+      const tone = (from, to, duration, volume, type = 'sine', delay = 0) => {
+        const start = now + delay;
+        const oscillator = audio.createOscillator();
+        const gain = audio.createGain();
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(from, start);
+        oscillator.frequency.exponentialRampToValueAtTime(to, start + duration);
+        gain.gain.setValueAtTime(0.001, start);
+        gain.gain.exponentialRampToValueAtTime(volume, start + Math.min(.012, duration / 3));
+        gain.gain.exponentialRampToValueAtTime(.001, start + duration);
+        oscillator.connect(gain).connect(audio.destination);
+        oscillator.start(start);
+        oscillator.stop(start + duration);
+      };
+      const noise = (duration, volume, frequency, delay = 0) => {
+        if (!noiseBuffer) {
+          noiseBuffer = audio.createBuffer(1, audio.sampleRate / 2, audio.sampleRate);
+          const data = noiseBuffer.getChannelData(0);
+          for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+        }
+        const start = now + delay;
+        const source = audio.createBufferSource();
+        const filter = audio.createBiquadFilter();
+        const gain = audio.createGain();
+        source.buffer = noiseBuffer;
+        filter.type = 'bandpass';
+        filter.frequency.value = frequency;
+        filter.Q.value = .7;
+        gain.gain.setValueAtTime(.001, start);
+        gain.gain.exponentialRampToValueAtTime(volume, start + .008);
+        gain.gain.exponentialRampToValueAtTime(.001, start + duration);
+        source.connect(filter).connect(gain).connect(audio.destination);
+        source.start(start);
+        source.stop(start + duration);
+      };
+      switch (kind) {
+        case 'coin':
+          tone(880, 1100, .085, .12, 'sine');
+          tone(1320, 1500, .13, .11, 'sine', .075);
+          break;
+        case 'life':
+          [523, 659, 784, 1047].forEach((note, i) => tone(note, note * 1.03, .16, .12, 'triangle', i * .105));
+          break;
+        case 'attackJavier':
+          noise(.13, .17, 1250);
+          tone(180, 75, .17, .11, 'sawtooth');
+          break;
+        case 'attackKarina':
+          tone(550, 1150, .19, .1, 'triangle');
+          noise(.12, .12, 2500, .025);
+          break;
+        case 'attackPatricia':
+        case 'dash':
+          noise(.2, .16, 850);
+          tone(330, 105, .2, .08, 'sawtooth');
+          break;
+        case 'hit':
+        case 'stomp':
+          noise(.105, .15, 620);
+          tone(220, 85, .12, .09, 'triangle');
+          break;
+        case 'hurt':
+          noise(.2, .13, 430);
+          tone(300, 105, .28, .13, 'sawtooth');
+          break;
+        case 'roar':
+          noise(.3, .18, 480);
+          tone(145, 65, .34, .13, 'sawtooth');
+          break;
+        case 'shield':
+          tone(440, 900, .26, .12, 'sine');
+          tone(660, 1320, .25, .07, 'triangle', .04);
+          break;
+        case 'jump': tone(220, 420, .13, .075, 'sine'); break;
+        case 'switch': tone(510, 760, .12, .08, 'triangle'); break;
+        case 'bossShot': tone(280, 115, .16, .045, 'sawtooth'); break;
+        case 'victory':
+          [523, 659, 784, 1047].forEach((note, i) => tone(note, note, .23, .11, 'triangle', i * .13));
+          break;
+        case 'defeat': tone(390, 110, .45, .12, 'triangle'); break;
+        case 'start': tone(440, 660, .22, .09, 'triangle'); break;
+        case 'mute': tone(660, 880, .09, .06); break;
+      }
     } catch { /* Sound is optional. */ }
   }
 
@@ -178,7 +254,7 @@
     ui.overlay.classList.remove('result');
     ui.pause.hidden = true;
     syncMusic();
-    sound(523, 0.12);
+    playSfx('start');
   }
 
   function showEnd(win) {
@@ -197,13 +273,13 @@
       ? `Cristina fue derrotada. ¡Patricia desbloqueada para la próxima partida! Puntaje: ${score}. La Casta llegará en futuros niveles.`
       : `Sumaste ${score} puntos. Podés volver a intentar el nivel desde el comienzo.`;
     ui.play.innerHTML = win ? 'JUGAR DE NUEVO <span>▶</span>' : 'REINTENTAR <span>▶</span>';
-    sound(win ? 784 : 180, 0.3);
+    playSfx(win ? 'victory' : 'defeat');
   }
 
   function hurt() {
     if (player.invulnerable > 0 || shieldTime > 0 || state !== 'playing') return;
     lives--;
-    sound(155, 0.18, 'sawtooth');
+    playSfx('hurt');
     if (lives <= 0) {
       syncUi();
       showEnd(false);
@@ -243,7 +319,7 @@
       }
       if (boss && boss.alive && boss.invulnerable <= 0 && overlap(hit, boss)) damageBoss(2);
     }
-    sound(heroIndex === 1 ? 690 : 170, .09, heroIndex === 1 ? 'square' : 'sawtooth');
+    playSfx(['attackJavier', 'attackKarina', 'attackPatricia'][heroIndex]);
   }
 
   function ability() {
@@ -253,7 +329,7 @@
       shieldTime = 1.8;
       effect('shield', player.x + 7, player.y + 10, 1, .45);
       message('ESCUDO ESTRATÉGICO', .9);
-      sound(850, .18);
+      playSfx('shield');
     } else if (heroIndex === 0) {
       message('¡RUGIDO DEL LEÓN!', .9);
       effect('roar', player.x + 7, player.y + 10, player.facing, .5);
@@ -261,7 +337,7 @@
       enemies.forEach(enemy => { if (enemy.alive && Math.abs(enemy.x - player.x) < 90) damageEnemy(enemy, 2); });
       if (boss && boss.alive && Math.abs(boss.x - player.x) < 95) damageBoss(2);
       spawnParticles(player.x + 7, player.y + 7, '#ffe07a', 20);
-      sound(120, .25, 'sawtooth');
+      playSfx('roar');
     } else {
       const oldX = player.x;
       player.x = clamp(player.x + player.facing * 62, 0, WORLD - player.w);
@@ -270,7 +346,7 @@
       for (const enemy of enemies) if (enemy.alive && Math.abs(enemy.x - player.x) < 35) damageEnemy(enemy, 2);
       if (boss && boss.alive && Math.abs(boss.x - player.x) < 46) damageBoss(2);
       message('¡EMBESTIDA!', .8);
-      sound(230, .13);
+      playSfx('dash');
     }
   }
 
@@ -278,11 +354,12 @@
     heroIndex = (heroIndex + 1) % (unlockedPatricia ? heroes.length : 2);
     syncUi();
     message(`AHORA JUGÁS CON ${heroes[heroIndex].name}`, 1);
-    sound(720, .08);
+    playSfx('switch');
   }
 
   function damageEnemy(enemy, amount) {
     enemy.hp -= amount;
+    playSfx('hit');
     spawnParticles(enemy.x + 8, enemy.y + 8, '#ffe2a3', 12);
     effect('hit', enemy.x + 8, enemy.y + 9, 1, .22);
     if (enemy.hp <= 0) {
@@ -295,6 +372,7 @@
   function damageBoss(amount) {
     if (boss.invulnerable > 0 || !boss.alive) return;
     boss.hp -= amount;
+    playSfx('hit');
     boss.invulnerable = .22;
     spawnParticles(boss.x + 15, boss.y + 23, '#f37d63', 18);
     effect('hit', boss.x + 15, boss.y + 23, 1, .3);
@@ -304,7 +382,7 @@
       score += 2000;
       shots = shots.filter(shot => shot.friendly);
       message('¡CRISTINA DERROTADA! LLEGÁ A LA META', 2.5);
-      sound(900, .3);
+      playSfx('victory');
       syncUi();
     }
   }
@@ -337,7 +415,7 @@
     if (jump && player.grounded) {
       player.vy = -hero.jump;
       player.grounded = false;
-      sound(380, .09);
+      playSfx('jump');
     }
     jumpQueued = false;
 
@@ -380,17 +458,18 @@
         coin.got = true;
         score += 100;
         spawnParticles(coin.x, coin.y, '#ffe789', 5);
-        sound(980, .08);
+        playSfx('coin');
         syncUi();
       }
     }
     if (!conanCollected && Math.abs(player.x - 850) < 16 && Math.abs(player.y + player.h - 230) < 20) {
       conanCollected = true;
+      const gainedLife = lives < 3;
       lives = Math.min(3, lives + 1);
       score += 250;
       spawnParticles(850, 210, '#ffe493', 15);
-      message('¡CONAN TE DA UNA VIDA!', 1.4);
-      sound(780, .15);
+      message(gainedLife ? '¡CONAN TE DA UNA VIDA!' : '¡CONAN TE DA 250 PUNTOS!', 1.4);
+      playSfx(gainedLife ? 'life' : 'coin');
       syncUi();
     }
 
@@ -414,7 +493,7 @@
         if (oldBottom <= enemy.y + 7 && player.vy > 0 && enemy.type !== 'bill') {
           damageEnemy(enemy, 3);
           player.vy = -190;
-          sound(260, .08);
+          playSfx('stomp');
         } else hurt();
       }
     }
@@ -427,7 +506,7 @@
         for (let i = -1; i <= 1; i++) {
           shots.push({ x: boss.x - 6, y: boss.y + 25, w: 8, h: 7, vx: -118, vy: i * 51, friendly: false, color: '#f18d5d', life: 3 });
         }
-        sound(170, .1, 'sawtooth');
+        playSfx('bossShot');
       }
       if (overlap(player, boss)) hurt();
       if (player.x > boss.x - 18 && player.x < boss.x + boss.w) player.x = boss.x - 18;
@@ -817,7 +896,7 @@
     ui.mute.setAttribute('aria-label', muted ? 'Activar sonido' : 'Silenciar');
     ui.mute.textContent = muted ? '♪' : '♫';
     syncMusic();
-    sound(660, .08);
+    playSfx('mute');
   });
   loadLevel(0);
   ui.message.classList.remove('show');
