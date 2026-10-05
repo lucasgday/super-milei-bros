@@ -50,6 +50,7 @@
   const GRAVITY = 650;
   const held = new Set();
   const touchHeld = new Set();
+  const activeTouches = new Map();
   const heroes = [
     { name: 'JAVIER', speed: 133, jump: 285, ability: 'RUGIDO DEL LEÓN' },
     { name: 'KARINA', speed: 146, jump: 315, ability: 'ESCUDO ESTRATÉGICO' },
@@ -130,8 +131,7 @@
       switchQueued = false;
       attackQueued = false;
       abilityQueued = false;
-      movePointer = null;
-      document.querySelectorAll('.touch-controls .is-held').forEach(button => button.classList.remove('is-held'));
+      activeTouches.clear();
     }
   }
 
@@ -996,51 +996,56 @@
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && state === 'playing') togglePause();
   });
-  const movePad = document.getElementById('movePad');
-  let movePointer = null;
   const setMoveDirection = x => {
-    const side = x < movePad.getBoundingClientRect().left + movePad.offsetWidth / 2 ? 'left' : 'right';
+    const bounds = canvas.getBoundingClientRect();
+    const side = x < bounds.left + bounds.width / 4 ? 'left' : 'right';
     touchHeld.delete('left');
     touchHeld.delete('right');
     touchHeld.add(side);
-    movePad.querySelectorAll('[data-direction]').forEach(button => button.classList.toggle('is-held', button.dataset.direction === side));
   };
-  movePad.addEventListener('pointerdown', event => {
-    if (movePointer !== null || state !== 'playing') return;
+  canvas.addEventListener('pointerdown', event => {
+    if (state !== 'playing' || event.button !== 0
+      || (event.pointerType === 'mouse' && !window.matchMedia('(max-width: 780px)').matches)) return;
     event.preventDefault();
-    movePointer = event.pointerId;
-    movePad.setPointerCapture(event.pointerId);
-    setMoveDirection(event.clientX);
+    const bounds = canvas.getBoundingClientRect();
+    const inMoveZone = event.clientX < bounds.left + bounds.width / 2;
+    const moving = inMoveZone && ![...activeTouches.values()].some(touch => touch.moving);
+    activeTouches.set(event.pointerId, { moving, ignored: inMoveZone && !moving, x: event.clientX, y: event.clientY, gestured: false });
+    canvas.setPointerCapture(event.pointerId);
+    if (moving) setMoveDirection(event.clientX);
   });
-  movePad.addEventListener('pointermove', event => {
-    if (movePointer === event.pointerId) setMoveDirection(event.clientX);
+  canvas.addEventListener('pointermove', event => {
+    const touch = activeTouches.get(event.pointerId);
+    if (!touch || touch.ignored || state !== 'playing') return;
+    event.preventDefault();
+    if (touch.moving) {
+      setMoveDirection(event.clientX);
+      return;
+    }
+    if (touch.gestured) return;
+    const dx = event.clientX - touch.x;
+    const dy = event.clientY - touch.y;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 28) return;
+    touch.gestured = true;
+    if (Math.abs(dx) > Math.abs(dy)) attackQueued = true;
+    else if (dy < 0) abilityQueued = true;
+    else switchQueued = true;
   });
-  const releaseMove = event => {
-    if (movePointer !== event.pointerId) return;
-    movePointer = null;
-    touchHeld.delete('left');
-    touchHeld.delete('right');
-    movePad.querySelectorAll('[data-direction]').forEach(button => button.classList.remove('is-held'));
+  const releaseTouch = event => {
+    const touch = activeTouches.get(event.pointerId);
+    if (!touch) return;
+    activeTouches.delete(event.pointerId);
+    if (!touch.moving && !touch.ignored && !touch.gestured && state === 'playing' && event.type === 'pointerup') jumpQueued = true;
+    if (touch.moving) {
+      touchHeld.delete('left');
+      touchHeld.delete('right');
+    }
   };
-  movePad.addEventListener('pointerup', releaseMove);
-  movePad.addEventListener('pointercancel', releaseMove);
-  movePad.addEventListener('lostpointercapture', releaseMove);
-  document.querySelectorAll('[data-control]').forEach(button => {
-    const control = button.dataset.control;
-    button.addEventListener('pointerdown', event => {
-      if (state !== 'playing') return;
-      event.preventDefault();
-      button.setPointerCapture(event.pointerId);
-      touchHeld.add(control);
-      button.classList.add('is-held');
-      if (control === 'switch') switchQueued = true;
-      if (control === 'jump') jumpQueued = true;
-      if (control === 'attack') attackQueued = true;
-      if (control === 'ability') abilityQueued = true;
-    });
-    const release = () => { touchHeld.delete(control); button.classList.remove('is-held'); };
-    button.addEventListener('pointerup', release);
-    button.addEventListener('pointercancel', release);
+  canvas.addEventListener('pointerup', releaseTouch);
+  canvas.addEventListener('pointercancel', releaseTouch);
+  canvas.addEventListener('lostpointercapture', releaseTouch);
+  canvas.addEventListener('contextmenu', event => {
+    if (state === 'playing') event.preventDefault();
   });
   ui.play.addEventListener('click', requestPlay);
   ui.playPortrait.addEventListener('click', () => {

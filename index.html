@@ -26,7 +26,7 @@
         <div><span class="hud-label">NIVEL</span><strong id="levelName">1-1</strong></div>
         <div><span class="hud-label">PUNTOS</span><strong id="score">000000</strong></div>
       </div>
-      <canvas id="game" width="960" height="540" aria-label="Plataformas lateral con Javier y Karina"></canvas>
+      <canvas id="game" width="960" height="540" aria-label="Plataformas lateral con Javier y Karina. En móvil: mitad izquierda para moverse; mitad derecha para saltar, deslizar a los lados para atacar, hacia arriba para la habilidad y hacia abajo para cambiar de personaje."></canvas>
       <div class="message" id="message" aria-live="polite"></div>
       <div class="overlay" id="overlay">
         <div class="overlay-art" aria-hidden="true">
@@ -68,18 +68,6 @@
       </div>
     </section>
 
-    <nav class="touch-controls" aria-label="Controles táctiles">
-      <div class="move-pad" id="movePad" aria-label="Mover personaje">
-        <button type="button" data-direction="left" aria-label="Izquierda">◀</button>
-        <button type="button" data-direction="right" aria-label="Derecha">▶</button>
-      </div>
-      <div class="action-pad">
-        <button type="button" class="minor-action" data-control="switch" aria-label="Cambiar personaje">⇄<span>CAMBIAR</span></button>
-        <button type="button" class="minor-action" data-control="ability" aria-label="Habilidad especial">★<span>ESPECIAL</span></button>
-        <button type="button" class="attack" data-control="attack" aria-label="Atacar">✦<span>ATACAR</span></button>
-        <button type="button" class="jump" data-control="jump" aria-label="Saltar">↑<span>SALTAR</span></button>
-      </div>
-    </nav>
     <footer>FAN GAME SATÍRICO · CÓDIGO ABIERTO · SIN AFILIACIÓN OFICIAL</footer>
   </main>
   <script src="./game.js"></script>

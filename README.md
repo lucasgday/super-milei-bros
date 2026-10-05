@@ -15,7 +15,7 @@ Abrí `index.html` en un navegador moderno. También podés servir la carpeta co
 | Cambiar Javier / Karina | Q |
 | Pausar | P |
 
-En pantallas táctiles aparecen controles debajo del juego.
+En móvil se juega directamente sobre el escenario, preferentemente en horizontal. Mantené un dedo en el primer cuarto de la pantalla para ir a la izquierda o en el segundo cuarto para ir a la derecha; podés deslizarlo entre ambos. Con otro dedo, en la mitad derecha: tocá para saltar, deslizá a los lados para atacar, hacia arriba para la habilidad especial o hacia abajo para cambiar de personaje. El botón de pausa queda arriba a la derecha.
 
 ## Desarrollo
 

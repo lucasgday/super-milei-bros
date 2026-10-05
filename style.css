@@ -86,3 +86,8 @@
 @keyframes rotate-phone{from{transform:rotate(0)}to{transform:rotate(90deg)}}
 @media (prefers-reduced-motion:reduce){.rotate-phone{animation:none;transform:rotate(90deg)}}
 @media(max-width:420px){.rotate-prompt h2{font-size:16px}.rotate-prompt p{font-size:14px}.rotate-prompt .primary-button{font-size:11px}}
+@media (max-width:780px), (hover:none) and (pointer:coarse){
+  body[data-game-state="playing"] .app{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+  body[data-game-state="playing"] .hud{pointer-events:none}
+  .stage-shell canvas{touch-action:none;-webkit-user-select:none;-webkit-touch-callout:none}
+}
