@@ -464,10 +464,12 @@
     ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
   }
   function text(label, x, y, color = '#fff', size = 8, align = 'left') {
-    ctx.font = `bold ${size}px monospace`;
+    ctx.font = `bold ${Math.max(size, 11)}px Arial, sans-serif`;
     ctx.textAlign = align;
-    ctx.fillStyle = '#08111b';
-    ctx.fillText(label, Math.round(x) + 1, Math.round(y) + 1);
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#08111b';
+    ctx.strokeText(label, Math.round(x), Math.round(y));
     ctx.fillStyle = color;
     ctx.fillText(label, Math.round(x), Math.round(y));
     ctx.textAlign = 'left';
