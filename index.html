@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101722">
+  <meta name="description" content="Super Milei Bros, un plataformas web open source protagonizado por Javier y Karina.">
+  <title>Super Milei Bros</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <div class="logo"><span class="logo-star">★</span> SUPER MILEI BROS <small>ALPHA 01</small></div>
+      <div class="header-actions">
+        <a href="https://github.com/lucasgday/super-milei-bros" class="source-link" id="sourceLink">CÓDIGO FUENTE ↗</a>
+        <button id="mute" class="icon-button" type="button" aria-label="Silenciar" aria-pressed="true">♫</button>
+      </div>
+    </header>
+
+    <section class="stage-shell" aria-label="Super Milei Bros">
+      <div class="hud">
+        <div><span class="hud-label">JUGADOR</span><strong id="heroName">JAVIER</strong></div>
+        <div><span class="hud-label">VIDAS</span><strong id="lives">♥ ♥ ♥</strong></div>
+        <div><span class="hud-label">NIVEL</span><strong id="levelName">1-1</strong></div>
+        <div><span class="hud-label">PUNTOS</span><strong id="score">000000</strong></div>
+      </div>
+      <canvas id="game" width="960" height="540" aria-label="Plataformas lateral con Javier y Karina"></canvas>
+      <div class="message" id="message" aria-live="polite"></div>
+      <div class="overlay" id="overlay">
+        <div class="overlay-art" aria-hidden="true"><span>J</span><span>K</span></div>
+        <p class="eyebrow" id="overlayEyebrow">UN JUEGO DE PLATAFORMAS</p>
+        <h1 id="overlayTitle">SUPER <em>MILEI</em> BROS</h1>
+        <p id="overlayBody">Corré, saltá y cruzá la avenida. Alterná entre Javier y Karina para superar a los piqueteros, los ñoquis y la inflación antes de enfrentar a Cristina.</p>
+        <button class="primary-button" id="play" type="button">EMPEZAR A JUGAR <span>▶</span></button>
+        <p class="overlay-hint">A / D mover · ESPACIO saltar · J atacar · K habilidad · Q cambiar</p>
+      </div>
+      <div class="pause-screen" id="pauseScreen" hidden><strong>PAUSA</strong><span>Presioná P para seguir</span></div>
+    </section>
+
+    <section class="below">
+      <div class="level-list">
+        <div class="section-label">MUNDO 01 <span>///</span> LA AVENIDA</div>
+        <div class="level-cards">
+          <div class="level-card active"><span>01</span><strong>La avenida</strong><small>Un recorrido corto y un boss intermedio</small></div>
+          <div class="level-card"><span>02</span><strong>La economía</strong><small>Próximamente</small></div>
+          <div class="level-card"><span>03</span><strong>La casta</strong><small>Próximamente</small></div>
+        </div>
+        <div class="roster"><span>PERSONAJES</span><strong>JAVIER · KARINA</strong><small id="rosterUnlock">PATRICIA 🔒</small></div>
+      </div>
+      <div class="help">
+        <div class="section-label">CONTROLES</div>
+        <div><span>MOVER</span><kbd>A</kbd><kbd>D</kbd><span class="or">/</span><kbd>←</kbd><kbd>→</kbd></div>
+        <div><span>SALTAR</span><kbd>ESPACIO</kbd><span class="or">/</span><kbd>↑</kbd></div>
+        <div><span>ATACAR</span><kbd>J</kbd><span class="or">CAMBIAR</span><kbd>Q</kbd></div>
+        <div><span>HABILIDAD</span><kbd>K</kbd><span class="or" id="abilityLabel">MOTOSIERRA</span></div>
+        <div><span>PAUSA</span><kbd>P</kbd></div>
+      </div>
+    </section>
+
+    <nav class="touch-controls" aria-label="Controles táctiles">
+      <div><button data-control="left" aria-label="Izquierda">◀</button><button data-control="right" aria-label="Derecha">▶</button></div>
+      <div><button data-control="switch" aria-label="Cambiar personaje">⇄</button><button data-control="ability" aria-label="Habilidad especial">★</button><button data-control="attack" aria-label="Atacar">✦</button><button class="jump" data-control="jump" aria-label="Saltar">↑</button></div>
+    </nav>
+    <footer>FAN GAME SATÍRICO · CÓDIGO ABIERTO · SIN AFILIACIÓN OFICIAL</footer>
+  </main>
+  <script src="./game.js"></script>
+</body>
+</html>
