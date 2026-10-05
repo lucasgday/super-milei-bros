@@ -15,6 +15,7 @@
       <div class="header-actions">
         <a href="https://github.com/lucasgday/super-milei-bros" class="source-link" id="sourceLink">CÓDIGO FUENTE ↗</a>
         <button id="mute" class="icon-button" type="button" aria-label="Silenciar" aria-pressed="true">♫</button>
+        <button id="mobilePause" class="icon-button mobile-pause" type="button" aria-label="Pausar" aria-pressed="false">Ⅱ</button>
       </div>
     </header>
 
@@ -37,12 +38,12 @@
         <p id="overlayBody">Javier y Karina recorren una Argentina de caricatura. Una aventura independiente y no oficial, hecha con humor político.</p>
         <button class="primary-button" id="play" type="button">JUGAR <span>▶</span></button>
       </div>
-      <div class="pause-screen" id="pauseScreen" hidden><strong>PAUSA</strong><span>Presioná P para seguir</span></div>
+      <div class="pause-screen" id="pauseScreen" hidden><strong>PAUSA</strong><button class="primary-button" id="resume" type="button">CONTINUAR <span>▶</span></button></div>
     </section>
 
     <section class="below">
       <div class="level-list">
-        <div class="section-label">MUNDO 01 <span>///</span> LA AVENIDA</div>
+        <div class="section-label">MUNDO 01 <span>///</span> BUENOS AIRES</div>
         <div class="level-cards">
           <div class="level-card active"><span>01</span><strong>La avenida</strong><small>Un recorrido corto y un boss intermedio</small></div>
           <div class="level-card"><span>02</span><strong>La economía</strong><small>Próximamente</small></div>
@@ -61,8 +62,16 @@
     </section>
 
     <nav class="touch-controls" aria-label="Controles táctiles">
-      <div><button data-control="left" aria-label="Izquierda">◀</button><button data-control="right" aria-label="Derecha">▶</button></div>
-      <div><button data-control="switch" aria-label="Cambiar personaje">⇄</button><button data-control="ability" aria-label="Habilidad especial">★</button><button data-control="attack" aria-label="Atacar">✦</button><button class="jump" data-control="jump" aria-label="Saltar">↑</button></div>
+      <div class="move-pad" id="movePad" aria-label="Mover personaje">
+        <button type="button" data-direction="left" aria-label="Izquierda">◀</button>
+        <button type="button" data-direction="right" aria-label="Derecha">▶</button>
+      </div>
+      <div class="action-pad">
+        <button type="button" class="minor-action" data-control="switch" aria-label="Cambiar personaje">⇄<span>CAMBIAR</span></button>
+        <button type="button" class="minor-action" data-control="ability" aria-label="Habilidad especial">★<span>ESPECIAL</span></button>
+        <button type="button" class="attack" data-control="attack" aria-label="Atacar">✦<span>ATACAR</span></button>
+        <button type="button" class="jump" data-control="jump" aria-label="Saltar">↑<span>SALTAR</span></button>
+      </div>
     </nav>
     <footer>FAN GAME SATÍRICO · CÓDIGO ABIERTO · SIN AFILIACIÓN OFICIAL</footer>
   </main>

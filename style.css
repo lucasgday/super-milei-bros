@@ -20,3 +20,57 @@
 .overlay.result .overlay-art{display:none}
 @media(max-width:780px){.overlay-art{gap:12px;margin-bottom:2px}.overlay-art span{width:65px;height:57px}.overlay-art figcaption{font-size:10px}}
 @media(max-width:420px){.overlay-art{display:flex}.overlay-art span{width:60px;height:52px}.overlay-art figcaption{display:none}}
+
+.mobile-pause{display:none}
+@media (max-width:780px), (hover:none) and (pointer:coarse){
+  html,body{height:100%;overscroll-behavior:none}
+  .app{height:100dvh;min-height:0;max-width:none;display:flex;flex-direction:column;overflow:hidden;padding:env(safe-area-inset-top) 0 0}
+  .header{flex:none;min-height:49px;margin:0;padding:6px 12px;border-bottom-color:#48606c}
+  .header-actions{gap:8px}
+  .source-link{display:none}
+  .mobile-pause{display:none}
+  body[data-game-state="playing"] .mobile-pause,body[data-game-state="paused"] .mobile-pause{display:block}
+  .stage-shell{flex:1;min-height:0;aspect-ratio:auto;border:0;box-shadow:none}
+  .stage-shell canvas{width:100%;height:100%}
+  .below,footer{display:none}
+  .hud{padding:11px 12px 20px;gap:5px}
+  .hud-label{font-size:9px;margin-bottom:4px}
+  .hud strong{font-size:14px}
+  .message{top:68px;max-width:calc(100% - 24px);padding:9px 11px;font-size:13px;white-space:normal}
+  .overlay{padding:24px 25px;justify-content:center}
+  .overlay-art{gap:18px;margin-bottom:20px}
+  .overlay-art span{width:120px;height:112px}
+  .overlay-art figcaption{display:block;font-size:12px}
+  .eyebrow{font-size:12px;margin-bottom:14px}
+  .overlay h1{font-size:clamp(20px,6vw,28px)}
+  .overlay>p:not(.eyebrow):not(.overlay-hint){font-size:15px;line-height:1.45;margin:20px 0;max-width:360px}
+  .primary-button{min-height:52px;padding:10px 22px;font-size:14px}
+  .touch-controls{--control-size:clamp(58px,18vw,76px);display:none;flex:none;grid-template-columns:1fr auto;align-items:end;gap:12px;max-width:none;min-height:156px;margin:0;padding:11px 14px calc(12px + env(safe-area-inset-bottom));background:#14212e;border-top:1px solid #3d5869;touch-action:none;user-select:none;-webkit-user-select:none}
+  body[data-game-state="playing"] .touch-controls,body[data-game-state="paused"] .touch-controls{display:grid}
+  .touch-controls .move-pad,.touch-controls .action-pad{display:grid;grid-template-columns:repeat(2,var(--control-size));gap:7px;align-items:end}
+  .move-pad{height:calc(var(--control-size) + 50px);align-content:end;touch-action:none}
+  .touch-controls button{width:var(--control-size);height:var(--control-size);border-radius:8px;border:1px solid #7395a6;border-bottom-width:4px;background:#2c4c5d;box-shadow:0 3px 0 #0b1822;font-size:27px;touch-action:none;-webkit-tap-highlight-color:transparent}
+  .touch-controls button.is-held{transform:translateY(3px);box-shadow:none;background:#426a7b}
+  .action-pad{grid-template-rows:42px var(--control-size)}
+  .touch-controls .minor-action{height:42px;display:flex;flex-direction:column;gap:0;background:#273b48;border-color:#5c7582;font-size:19px}
+  .touch-controls button span{display:block;font:700 9px 'Space Grotesk',Arial,sans-serif;letter-spacing:0}
+  .touch-controls .attack{background:#43827b;border-color:#87cec1}
+  .touch-controls .jump{background:#d66b4b;border-color:#ffb17a}
+  .touch-controls .attack.is-held{background:#56a098}
+  .touch-controls .jump.is-held{background:#ee8260}
+  .pause-screen strong{font-size:24px}
+}
+@media (max-width:780px) and (orientation:landscape), (hover:none) and (pointer:coarse) and (orientation:landscape){
+  .app{position:relative;padding:0}
+  .header{position:absolute;z-index:5;top:0;left:0;right:0;min-height:44px;background:#101722c9;border:0}
+  .stage-shell{width:100%;height:100%}
+  .touch-controls{position:absolute;z-index:5;left:0;right:0;bottom:0;min-height:0;padding:8px calc(14px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left));background:transparent;border:0;pointer-events:none}
+  .touch-controls button,.move-pad{pointer-events:auto}
+  .move-pad{height:auto}
+  .hud{top:39px;padding-top:5px}
+  .message{top:90px}
+  .overlay-art span{width:64px;height:58px}
+  .overlay-art{margin-bottom:4px}
+  .overlay>p:not(.eyebrow):not(.overlay-hint){font-size:12px;margin:8px 0}
+  .overlay h1{font-size:22px}
+}

@@ -14,6 +14,8 @@
     body: document.getElementById('overlayBody'),
     play: document.getElementById('play'),
     pause: document.getElementById('pauseScreen'),
+    mobilePause: document.getElementById('mobilePause'),
+    resume: document.getElementById('resume'),
     message: document.getElementById('message'),
     hero: document.getElementById('heroName'),
     lives: document.getElementById('lives'),
@@ -40,7 +42,7 @@
   bossTrack.loop = true;
   bossTrack.volume = 0.38;
 
-  const W = 480;
+  let W = 480;
   const H = 270;
   const WORLD = 1760;
   const GRAVITY = 650;
@@ -53,7 +55,7 @@
   ];
 
   const levelData = [{
-    name: 'LA AVENIDA', sky: '#72b8c3', far: '#6689a1', near: '#344b69',
+    name: 'BUENOS AIRES · LA AVENIDA', sky: '#72b8c3', far: '#6689a1', near: '#344b69',
     ground: [[0, 380], [420, 900], [940, 1360], [1400, WORLD]],
     ledges: [[145, 192, 86], [290, 166, 74], [510, 189, 86], [680, 168, 80], [810, 184, 65], [1030, 178, 90], [1210, 158, 82], [1480, 183, 78]],
     enemies: [
@@ -101,6 +103,40 @@
     ...current().ground.map(([a, b]) => ({ x: a, y: 230, w: b - a, h: 40 })),
     ...current().ledges.map(([x, y, w]) => ({ x, y, w, h: 12 })),
   ];
+
+  function resizeCanvas() {
+    const bounds = canvas.getBoundingClientRect();
+    if (!bounds.width || !bounds.height) return;
+    W = Math.round(H * bounds.width / bounds.height);
+    canvas.width = W;
+    canvas.height = H;
+    ctx.imageSmoothingEnabled = false;
+    if (player) cam = clamp(player.x - W * .32, 0, Math.max(0, WORLD - W));
+  }
+
+  function setState(next) {
+    state = next;
+    document.body.dataset.gameState = next;
+    ui.mobilePause.setAttribute('aria-label', next === 'paused' ? 'Continuar' : 'Pausar');
+    ui.mobilePause.setAttribute('aria-pressed', String(next === 'paused'));
+    ui.mobilePause.textContent = next === 'paused' ? '▶' : 'Ⅱ';
+    if (next !== 'playing') {
+      touchHeld.clear();
+      jumpQueued = false;
+      switchQueued = false;
+      attackQueued = false;
+      abilityQueued = false;
+      movePointer = null;
+      document.querySelectorAll('.touch-controls .is-held').forEach(button => button.classList.remove('is-held'));
+    }
+  }
+
+  function togglePause() {
+    if (state !== 'playing' && state !== 'paused') return;
+    setState(state === 'playing' ? 'paused' : 'playing');
+    ui.pause.hidden = state !== 'paused';
+    syncMusic();
+  }
 
   function playSfx(kind) {
     if (muted) return;
@@ -249,7 +285,7 @@
     lives = 3;
     heroIndex = 0;
     loadLevel(0);
-    state = 'playing';
+    setState('playing');
     ui.overlay.hidden = true;
     ui.overlay.classList.remove('result');
     ui.pause.hidden = true;
@@ -258,7 +294,7 @@
   }
 
   function showEnd(win) {
-    state = win ? 'won' : 'lost';
+    setState(win ? 'won' : 'lost');
     syncMusic();
     if (win) {
       unlockedPatricia = true;
@@ -449,7 +485,7 @@
     if (player.x > 1370) player.checkpoint = 1410;
     companion.x += (player.x - player.facing * 31 - companion.x) * Math.min(1, dt * 6);
     companion.y += (player.y - companion.y) * Math.min(1, dt * 9);
-    cam = clamp(player.x - 150, 0, WORLD - W);
+    cam = clamp(player.x - W * .32, 0, Math.max(0, WORLD - W));
     syncMusic();
 
     for (const coin of coins) {
@@ -569,6 +605,10 @@
     if (levelIndex === 0) {
       rect(0, 100, W, 130, '#a8c9bf');
       rect(355 - cam * .05, 38, 30, 30, '#f7e3a4');
+      const obeliskX = 170 - cam * .18;
+      rect(obeliskX, 72, 10, 82, '#e7ddc9');
+      rect(obeliskX + 2, 66, 6, 6, '#e7ddc9');
+      rect(obeliskX + 3, 63, 4, 3, '#e7ddc9');
     } else if (levelIndex === 1) {
       rect(0, 96, W, 134, '#3b3b64');
       rect(390 - cam * .05, 38, 27, 27, '#e2b78b');
@@ -860,22 +900,51 @@
     if (event.code === 'KeyJ') attackQueued = true;
     if (event.code === 'KeyK') abilityQueued = true;
     if (event.code === 'Space' || event.code === 'ArrowUp' || event.code === 'KeyW') jumpQueued = true;
-    if (event.code === 'KeyP' && (state === 'playing' || state === 'paused')) {
-      state = state === 'playing' ? 'paused' : 'playing';
-      ui.pause.hidden = state !== 'paused';
-      syncMusic();
-    }
+    if (event.code === 'KeyP') togglePause();
     if (event.code === 'Enter' && (state === 'menu' || state === 'won' || state === 'lost')) begin();
   });
   window.addEventListener('keyup', event => held.delete(event.code));
   window.addEventListener('blur', () => {
     held.clear();
     touchHeld.clear();
-    if (state === 'playing') { state = 'paused'; ui.pause.hidden = false; syncMusic(); }
+    if (state === 'playing') togglePause();
   });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && state === 'playing') togglePause();
+  });
+  const movePad = document.getElementById('movePad');
+  let movePointer = null;
+  const setMoveDirection = x => {
+    const side = x < movePad.getBoundingClientRect().left + movePad.offsetWidth / 2 ? 'left' : 'right';
+    touchHeld.delete('left');
+    touchHeld.delete('right');
+    touchHeld.add(side);
+    movePad.querySelectorAll('[data-direction]').forEach(button => button.classList.toggle('is-held', button.dataset.direction === side));
+  };
+  movePad.addEventListener('pointerdown', event => {
+    if (movePointer !== null || state !== 'playing') return;
+    event.preventDefault();
+    movePointer = event.pointerId;
+    movePad.setPointerCapture(event.pointerId);
+    setMoveDirection(event.clientX);
+  });
+  movePad.addEventListener('pointermove', event => {
+    if (movePointer === event.pointerId) setMoveDirection(event.clientX);
+  });
+  const releaseMove = event => {
+    if (movePointer !== event.pointerId) return;
+    movePointer = null;
+    touchHeld.delete('left');
+    touchHeld.delete('right');
+    movePad.querySelectorAll('[data-direction]').forEach(button => button.classList.remove('is-held'));
+  };
+  movePad.addEventListener('pointerup', releaseMove);
+  movePad.addEventListener('pointercancel', releaseMove);
+  movePad.addEventListener('lostpointercapture', releaseMove);
   document.querySelectorAll('[data-control]').forEach(button => {
     const control = button.dataset.control;
     button.addEventListener('pointerdown', event => {
+      if (state !== 'playing') return;
       event.preventDefault();
       button.setPointerCapture(event.pointerId);
       touchHeld.add(control);
@@ -890,6 +959,8 @@
     button.addEventListener('pointercancel', release);
   });
   ui.play.addEventListener('click', begin);
+  ui.mobilePause.addEventListener('click', togglePause);
+  ui.resume.addEventListener('click', togglePause);
   ui.mute.addEventListener('click', () => {
     muted = !muted;
     ui.mute.setAttribute('aria-pressed', String(!muted));
@@ -899,6 +970,9 @@
     playSfx('mute');
   });
   loadLevel(0);
+  setState('menu');
+  resizeCanvas();
+  new ResizeObserver(resizeCanvas).observe(document.querySelector('.stage-shell'));
   ui.message.classList.remove('show');
   requestAnimationFrame(frame);
 })();
