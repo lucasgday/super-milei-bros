@@ -75,6 +75,7 @@
   let shots = [];
   let particles = [];
   let effects = [];
+  let encountered = new Set();
   let boss = null;
   let cam = 0;
   let elapsed = 0;
@@ -154,6 +155,7 @@
     shots = [];
     particles = [];
     effects = [];
+    encountered = new Set();
     boss = { x: 1615, y: 168, w: 35, h: 60, hp: 14, maxHp: 14, shotCd: 1.5, invulnerable: 0, alive: true };
     soundtrack.currentTime = 0;
     bossTrack.currentTime = 0;
@@ -173,6 +175,7 @@
     loadLevel(0);
     state = 'playing';
     ui.overlay.hidden = true;
+    ui.overlay.classList.remove('result');
     ui.pause.hidden = true;
     syncMusic();
     sound(523, 0.12);
@@ -187,6 +190,7 @@
       syncUi();
     }
     ui.overlay.hidden = false;
+    ui.overlay.classList.add('result');
     ui.eyebrow.textContent = win ? 'NIVEL 1-1 COMPLETADO' : 'FIN DE PARTIDA';
     ui.title.innerHTML = win ? '¡LO <em>LOGRAMOS!</em>' : 'VOLVÉ A <em>INTENTARLO</em>';
     ui.body.textContent = win
@@ -392,6 +396,11 @@
 
     for (const enemy of enemies) {
       if (!enemy.alive) continue;
+      if (!encountered.has(enemy.type) && enemy.x > player.x && enemy.x - player.x < 105) {
+        encountered.add(enemy.type);
+        const introductions = { piquetero: 'APARECEN LOS PIQUETEROS', noqui: 'CUIDADO CON LOS ÑOQUIS', bill: 'SE DISPARA LA INFLACIÓN' };
+        message(introductions[enemy.type], 3.2);
+      }
       enemy.phase += dt;
       if (enemy.type === 'bill') {
         enemy.x = enemy.startX + Math.sin(enemy.phase * 1.6) * 24;
@@ -570,6 +579,7 @@
     const ready = sheet.complete && sheet.naturalWidth > 0;
     if (ready) {
       ctx.save();
+      ctx.imageSmoothingEnabled = true;
       if (facing < 0) {
         ctx.translate(x * 2 + 14, 0);
         ctx.scale(-1, 1);
@@ -577,8 +587,8 @@
       if (who === 2) {
         ctx.drawImage(sheet, 0, 0, sheet.naturalWidth, sheet.naturalHeight, x - 14, y - 21, 43, 43);
       } else {
-        const half = Math.floor(sheet.naturalWidth / 2);
-        ctx.drawImage(sheet, who * half, 0, half, sheet.naturalHeight, x - 12, y - 20, 39, 42);
+        const crop = who === 0 ? [100, 0, 750, 887] : [970, 0, 770, 887];
+        ctx.drawImage(sheet, ...crop, x - 15, y - 24, 44, 46);
       }
       ctx.restore();
     } else {
@@ -599,16 +609,20 @@
     const x = Math.round(enemy.x - cam);
     const y = Math.round(enemy.y);
     if (sprites.enemies.complete && sprites.enemies.naturalWidth) {
-      const third = Math.floor(sprites.enemies.naturalWidth / 3);
       const index = enemy.type === 'piquetero' ? 0 : enemy.type === 'bill' ? 1 : 2;
-      const size = enemy.type === 'bill' ? 39 : 35;
-      ctx.drawImage(sprites.enemies, index * third, 0, third, sprites.enemies.naturalHeight,
-        x + enemy.w / 2 - size / 2, y + enemy.h - size, size, size);
+      const crops = [[35, 25, 500, 625], [555, 65, 840, 575], [1405, 55, 730, 605]];
+      const sizes = [[38, 47], [51, 37], [45, 40]];
+      const [sx, sy, sw, sh] = crops[index];
+      const [width, height] = sizes[index];
+      ctx.save();
+      ctx.imageSmoothingEnabled = true;
+      ctx.translate(x + enemy.w / 2, y + enemy.h);
+      ctx.scale(-1, 1);
+      ctx.drawImage(sprites.enemies, sx, sy, sw, sh, -width / 2, -height, width, height);
+      ctx.restore();
     } else {
       rect(x, y, enemy.w, enemy.h, enemy.type === 'bill' ? '#7ed276' : '#c75b58');
     }
-    const name = enemy.type === 'bill' ? 'INFLACIÓN' : enemy.type === 'noqui' ? 'ÑOQUI' : 'PIQUETERO';
-    text(name, x + enemy.w / 2, y - (enemy.type === 'bill' ? 25 : 17), '#fff4bf', 7, 'center');
   }
 
   function drawEffects() {
@@ -677,6 +691,7 @@
     if (!boss || !boss.alive) return;
     const x = Math.round(boss.x - cam);
     const y = Math.round(boss.y);
+    ctx.imageSmoothingEnabled = true;
     if (boss.invulnerable > 0) ctx.globalAlpha = .55 + .45 * Math.sin(elapsed * 48) ** 2;
     if (sprites.cristina.complete && sprites.cristina.naturalWidth) {
       ctx.drawImage(sprites.cristina, x - 22, y - 14, 79, 73);
@@ -684,6 +699,7 @@
       rect(x - 5, y, 48, 58, '#9b3156');
     }
     ctx.globalAlpha = 1;
+    ctx.imageSmoothingEnabled = false;
     text('CRISTINA', x + 19, y - 5, '#ffe38c', 7, 'center');
     rect(x - 4, y - 16, 45, 4, '#311d28');
     rect(x - 4, y - 16, 45 * boss.hp / boss.maxHp, 4, '#e56d60');
