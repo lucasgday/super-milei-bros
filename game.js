@@ -5,11 +5,15 @@
   const ctx = canvas.getContext('2d');
 
   const ui = {
+    header: document.querySelector('.header'),
     overlay: document.getElementById('overlay'),
     eyebrow: document.getElementById('overlayEyebrow'),
     title: document.getElementById('overlayTitle'),
     body: document.getElementById('overlayBody'),
     play: document.getElementById('play'),
+    rotate: document.getElementById('rotatePrompt'),
+    playPortrait: document.getElementById('playPortrait'),
+    rotateBack: document.getElementById('rotateBack'),
     pause: document.getElementById('pauseScreen'),
     mobilePause: document.getElementById('mobilePause'),
     resume: document.getElementById('resume'),
@@ -89,6 +93,7 @@
   let conanCollected = false;
   let unlockedPatricia = false;
   let muted = false;
+  let portraitAllowed = false;
   let audio = null;
   let noiseBuffer = null;
   let lastFrame = performance.now();
@@ -280,6 +285,7 @@
   }
 
   function begin() {
+    closeRotatePrompt();
     score = 0;
     lives = 3;
     heroIndex = 0;
@@ -290,6 +296,23 @@
     ui.pause.hidden = true;
     syncMusic();
     playSfx('start');
+  }
+
+  function closeRotatePrompt() {
+    ui.rotate.hidden = true;
+    ui.overlay.inert = false;
+    ui.header.inert = false;
+  }
+
+  function requestPlay() {
+    if (!portraitAllowed && window.matchMedia('(orientation: portrait) and (max-width: 780px), (orientation: portrait) and (hover: none) and (pointer: coarse)').matches) {
+      ui.rotate.hidden = false;
+      ui.overlay.inert = true;
+      ui.header.inert = true;
+      ui.playPortrait.focus();
+      return;
+    }
+    begin();
   }
 
   function showEnd(win) {
@@ -939,6 +962,21 @@
 
   const keyMap = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'Space', 'KeyA', 'KeyD', 'KeyW', 'KeyJ', 'KeyK', 'KeyQ', 'KeyP', 'Enter']);
   window.addEventListener('keydown', event => {
+    if (!ui.rotate.hidden && event.code === 'Escape') {
+      closeRotatePrompt();
+      ui.play.focus();
+      return;
+    }
+    if (!ui.rotate.hidden && event.code === 'Tab') {
+      if (event.shiftKey && document.activeElement === ui.playPortrait) {
+        event.preventDefault();
+        ui.rotateBack.focus();
+      } else if (!event.shiftKey && document.activeElement === ui.rotateBack) {
+        event.preventDefault();
+        ui.playPortrait.focus();
+      }
+    }
+    if (!ui.rotate.hidden) return;
     if (keyMap.has(event.code)) event.preventDefault();
     if (event.repeat) { held.add(event.code); return; }
     held.add(event.code);
@@ -947,7 +985,7 @@
     if (event.code === 'KeyK') abilityQueued = true;
     if (event.code === 'Space' || event.code === 'ArrowUp' || event.code === 'KeyW') jumpQueued = true;
     if (event.code === 'KeyP') togglePause();
-    if (event.code === 'Enter' && (state === 'menu' || state === 'won' || state === 'lost')) begin();
+    if (event.code === 'Enter' && ui.rotate.hidden && (state === 'menu' || state === 'won' || state === 'lost')) requestPlay();
   });
   window.addEventListener('keyup', event => held.delete(event.code));
   window.addEventListener('blur', () => {
@@ -1004,7 +1042,18 @@
     button.addEventListener('pointerup', release);
     button.addEventListener('pointercancel', release);
   });
-  ui.play.addEventListener('click', begin);
+  ui.play.addEventListener('click', requestPlay);
+  ui.playPortrait.addEventListener('click', () => {
+    portraitAllowed = true;
+    begin();
+  });
+  ui.rotateBack.addEventListener('click', () => {
+    closeRotatePrompt();
+    ui.play.focus();
+  });
+  window.addEventListener('resize', () => {
+    if (!ui.rotate.hidden && window.matchMedia('(orientation: landscape)').matches) begin();
+  });
   ui.mobilePause.addEventListener('click', togglePause);
   ui.resume.addEventListener('click', togglePause);
   ui.mute.addEventListener('click', () => {
