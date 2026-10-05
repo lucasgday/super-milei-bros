@@ -3,9 +3,6 @@
 
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
-  canvas.width = 480;
-  canvas.height = 270;
-  ctx.imageSmoothingEnabled = false;
 
   const ui = {
     overlay: document.getElementById('overlay'),
@@ -44,6 +41,7 @@
 
   let W = 480;
   const H = 270;
+  const RENDER_SCALE = 2;
   const WORLD = 1760;
   const GRAVITY = 650;
   const held = new Set();
@@ -108,8 +106,9 @@
     const bounds = canvas.getBoundingClientRect();
     if (!bounds.width || !bounds.height) return;
     W = Math.round(H * bounds.width / bounds.height);
-    canvas.width = W;
-    canvas.height = H;
+    canvas.width = W * RENDER_SCALE;
+    canvas.height = H * RENDER_SCALE;
+    ctx.setTransform(RENDER_SCALE, 0, 0, RENDER_SCALE, 0, 0);
     ctx.imageSmoothingEnabled = false;
     if (player) cam = clamp(player.x - W * .32, 0, Math.max(0, WORLD - W));
   }
@@ -601,18 +600,35 @@
 
   function background() {
     const data = current();
-    rect(0, 0, W, H, data.sky);
     if (levelIndex === 0) {
-      rect(0, 100, W, 130, '#a8c9bf');
-      rect(355 - cam * .05, 38, 30, 30, '#f7e3a4');
-      const obeliskX = 170 - cam * .18;
-      rect(obeliskX, 72, 10, 82, '#e7ddc9');
-      rect(obeliskX + 2, 66, 6, 6, '#e7ddc9');
-      rect(obeliskX + 3, 63, 4, 3, '#e7ddc9');
+      const sky = ctx.createLinearGradient(0, 0, 0, 195);
+      sky.addColorStop(0, '#78b6c8');
+      sky.addColorStop(1, '#c9d8bf');
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, W, H);
+      ctx.save();
+      ctx.fillStyle = '#fff0ba';
+      ctx.shadowColor = '#ffefbd';
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      ctx.arc(355 - cam * .05, 48, 15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      ctx.fillStyle = '#eaf0db';
+      ctx.globalAlpha = .36;
+      for (let i = 0; i < 5; i++) {
+        const x = i * 145 - cam * .07 + 25;
+        ctx.beginPath();
+        ctx.ellipse(x, 58 + i % 2 * 24, 25, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
     } else if (levelIndex === 1) {
+      rect(0, 0, W, H, data.sky);
       rect(0, 96, W, 134, '#3b3b64');
       rect(390 - cam * .05, 38, 27, 27, '#e2b78b');
     } else {
+      rect(0, 0, W, H, data.sky);
       rect(0, 100, W, 130, '#323952');
       rect(390 - cam * .05, 35, 27, 27, '#a4b9c6');
     }
@@ -620,14 +636,34 @@
       const x = i * 63 - (cam * .18 % 63);
       const tall = 34 + (i * 19 % 42);
       rect(x, 153 - tall, 52, tall + 78, data.far);
+      rect(x - 2, 151 - tall, 56, 3, '#688fa0');
       for (let wx = 8; wx < 48; wx += 15) for (let wy = 9; wy < tall; wy += 15) rect(x + wx, 153 - tall + wy, 4, 6, '#d0bc91');
+    }
+    if (levelIndex === 0) {
+      const x = 155 - cam * .18;
+      rect(x - 7, 150, 25, 5, '#d9d0bb');
+      rect(x - 4, 145, 19, 5, '#eee2c9');
+      rect(x, 72, 11, 73, '#e7ddc9');
+      rect(x + 2, 66, 7, 6, '#f4e7ce');
+      ctx.fillStyle = '#f4e7ce';
+      ctx.beginPath();
+      ctx.moveTo(x + 2, 66);
+      ctx.lineTo(x + 5.5, 59);
+      ctx.lineTo(x + 9, 66);
+      ctx.fill();
+      rect(x + 3, 82, 2, 3, '#8da6a4');
+      rect(x + 7, 82, 2, 3, '#8da6a4');
     }
     for (let i = -1; i < 11; i++) {
       const x = i * 83 - (cam * .36 % 83);
       const tall = 37 + (i * 23 % 43);
       rect(x, 196 - tall, 70, tall + 38, data.near);
+      rect(x - 1, 193 - tall, 72, 3, '#263f53');
+      rect(x + 3, 196 - tall, 3, tall + 38, '#506981');
       rect(x + 9, 196 - tall + 8, 13, 17, '#7d98a0');
+      rect(x + 9, 196 - tall + 8, 13, 2, '#bfd0be');
       rect(x + 42, 196 - tall + 8, 13, 17, '#7d98a0');
+      rect(x + 42, 196 - tall + 8, 13, 2, '#bfd0be');
       rect(x + 29, 196 - 29, 12, 29, '#152238');
     }
     const castleX = 1500 - cam;
@@ -664,13 +700,14 @@
     for (const [a, b] of current().ground) {
       const sx = a - cam;
       if (sx > W || b - cam < 0) continue;
-      rect(sx, 230, b - a, 40, levelIndex === 0 ? '#b8774e' : '#707d82');
-      rect(sx, 230, b - a, 5, levelIndex === 0 ? '#5f9f68' : '#adbb9e');
+      rect(sx, 230, b - a, 40, levelIndex === 0 ? '#415465' : '#707d82');
+      rect(sx, 230, b - a, 4, levelIndex === 0 ? '#d9bf92' : '#adbb9e');
+      rect(sx, 234, b - a, 4, '#7d8d8d');
       for (let x = a; x < b; x += 20) {
         const screen = x - cam;
         if (screen < -25 || screen > W) continue;
-        rect(screen, 242, 18, 2, '#253844');
-        rect(screen + 9, 256, 9, 2, '#253844');
+        rect(screen, 239, 1, 6, '#273b4b');
+        rect(screen + 3, 253, 11, 2, '#b5b9aa');
       }
     }
     for (const [x, y, w] of current().ledges) {
@@ -686,9 +723,15 @@
     if (coin.got) return;
     const x = Math.round(coin.x - cam);
     const y = Math.round(coin.y + Math.sin(elapsed * 5 + coin.x) * 2);
-    rect(x - 4, y - 6, 8, 12, '#9d6729');
-    rect(x - 3, y - 6, 6, 11, '#ffe381');
-    rect(x - 1, y - 4, 2, 7, '#d99538');
+    ctx.fillStyle = '#9d6729';
+    ctx.beginPath();
+    ctx.ellipse(x, y, 5, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffe381';
+    ctx.beginPath();
+    ctx.ellipse(x - 1, y - 1, 3.5, 5.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    rect(x - 2, y - 4, 1, 6, '#fff5bf');
   }
 
   function drawHero(x, y, who, active, facing = 1) {
@@ -699,6 +742,7 @@
     if (ready) {
       ctx.save();
       ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       if (facing < 0) {
         ctx.translate(x * 2 + 14, 0);
         ctx.scale(-1, 1);
@@ -735,6 +779,7 @@
       const [width, height] = sizes[index];
       ctx.save();
       ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.translate(x + enemy.w / 2, y + enemy.h);
       ctx.scale(-1, 1);
       ctx.drawImage(sprites.enemies, sx, sy, sw, sh, -width / 2, -height, width, height);
@@ -811,6 +856,7 @@
     const x = Math.round(boss.x - cam);
     const y = Math.round(boss.y);
     ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     if (boss.invulnerable > 0) ctx.globalAlpha = .55 + .45 * Math.sin(elapsed * 48) ** 2;
     if (sprites.cristina.complete && sprites.cristina.naturalWidth) {
       ctx.drawImage(sprites.cristina, x - 22, y - 14, 79, 73);

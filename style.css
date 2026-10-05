@@ -74,3 +74,4 @@
   .overlay>p:not(.eyebrow):not(.overlay-hint){font-size:12px;margin:8px 0}
   .overlay h1{font-size:22px}
 }
+.stage-shell canvas{image-rendering:auto}
