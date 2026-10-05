@@ -28,11 +28,15 @@
   };
   const sprites = {
     heroes: new Image(),
+    javierAnimated: new Image(),
+    karinaAnimated: new Image(),
     patricia: new Image(),
     cristina: new Image(),
     enemies: new Image(),
   };
   sprites.heroes.src = './assets/heroes.png';
+  sprites.javierAnimated.src = './assets/javier-animated.png';
+  sprites.karinaAnimated.src = './assets/karina-animated.png';
   sprites.patricia.src = './assets/patricia.png';
   sprites.cristina.src = './assets/cristina.png';
   sprites.enemies.src = './assets/enemies.png';
@@ -261,8 +265,8 @@
   function loadLevel(index) {
     levelIndex = index;
     const data = current();
-    player = { x: 35, y: 170, w: 14, h: 22, vx: 0, vy: 0, grounded: false, facing: 1, invulnerable: 0, attackCd: 0, checkpoint: 35 };
-    companion = { x: 12, y: 170 };
+    player = { x: 35, y: 170, w: 14, h: 22, vx: 0, vy: 0, grounded: false, facing: 1, invulnerable: 0, attackCd: 0, attackPose: 0, stride: 0, checkpoint: 35 };
+    companion = { x: 12, y: 170, vx: 0, stride: 0 };
     enemies = data.enemies.map(([type, x, y]) => ({
       type, x, y, w: type === 'bill' ? 19 : 17, h: type === 'bill' ? 17 : 22,
       startX: x, startY: y, direction: -1, hp: type === 'piquetero' ? 3 : 2, alive: true, phase: Math.random() * 6,
@@ -366,6 +370,7 @@
   function attack() {
     if (player.attackCd > 0 || state !== 'playing') return;
     player.attackCd = heroIndex === 1 ? .32 : .44;
+    player.attackPose = .28;
     if (heroIndex === 1) {
       shots.push({ x: player.x + (player.facing > 0 ? 14 : -5), y: player.y + 7, w: 11, h: 10, vx: player.facing * 270, vy: 0, friendly: true, color: '#a4e7f2', life: 1.5 });
       effect('launch', player.x + 7, player.y + 12, player.facing, .18);
@@ -410,6 +415,7 @@
 
   function switchHero() {
     heroIndex = (heroIndex + 1) % (unlockedPatricia ? heroes.length : 2);
+    player.attackPose = 0;
     syncUi();
     message(`AHORA JUGÁS CON ${heroes[heroIndex].name}`, 1);
     playSfx('switch');
@@ -464,6 +470,7 @@
 
     const hero = heroes[heroIndex];
     player.attackCd = Math.max(0, player.attackCd - dt);
+    player.attackPose = Math.max(0, player.attackPose - dt);
     player.invulnerable = Math.max(0, player.invulnerable - dt);
     boss.invulnerable = Math.max(0, boss.invulnerable - dt);
     shieldTime = Math.max(0, shieldTime - dt);
@@ -485,6 +492,7 @@
       if (oldX + player.w <= p.x + 2) player.x = p.x - player.w;
       else if (oldX >= p.x + p.w - 2) player.x = p.x + p.w;
     }
+    if (player.grounded) player.stride += Math.abs(player.x - oldX) / 14;
 
     const oldBottom = player.y + player.h;
     const oldTop = player.y;
@@ -505,7 +513,10 @@
     if (player.y > H + 35) hurt();
     if (player.x > 850) player.checkpoint = 965;
     if (player.x > 1370) player.checkpoint = 1410;
+    const companionX = companion.x;
     companion.x += (player.x - player.facing * 31 - companion.x) * Math.min(1, dt * 6);
+    companion.vx = (companion.x - companionX) / Math.max(dt, .001);
+    companion.stride += Math.abs(companion.x - companionX) / 14;
     companion.y += (player.y - companion.y) * Math.min(1, dt * 9);
     cam = clamp(player.x - W * .32, 0, Math.max(0, WORLD - W));
     syncMusic();
@@ -757,10 +768,11 @@
     rect(x - 2, y - 4, 1, 6, '#fff5bf');
   }
 
-  function drawHero(x, y, who, active, facing = 1) {
+  function drawHero(x, y, who, active, facing = 1, motion = null) {
     x = Math.round(x - cam);
     y = Math.round(y);
-    const sheet = who === 2 ? sprites.patricia : sprites.heroes;
+    const animated = who === 0 ? sprites.javierAnimated : who === 1 ? sprites.karinaAnimated : null;
+    const sheet = animated && animated.complete && animated.naturalWidth ? animated : who === 2 ? sprites.patricia : sprites.heroes;
     const ready = sheet.complete && sheet.naturalWidth > 0;
     if (ready) {
       ctx.save();
@@ -770,7 +782,13 @@
         ctx.translate(x * 2 + 14, 0);
         ctx.scale(-1, 1);
       }
-      if (who === 2) {
+      if (sheet === animated) {
+        const runFrames = [1, 0, 2, 0];
+        const frame = active && motion.attackPose > 0 ? 3
+          : Math.abs(motion.vx) > 8 ? runFrames[Math.floor(motion.stride) % runFrames.length] : 0;
+        const width = frame === 3 ? 49 : 44;
+        ctx.drawImage(sheet, frame * 543, 40, 543, 610, x + 7 - width / 2, y - 24, width, 46);
+      } else if (who === 2) {
         ctx.drawImage(sheet, 0, 0, sheet.naturalWidth, sheet.naturalHeight, x - 14, y - 21, 43, 43);
       } else {
         const crop = who === 0 ? [100, 0, 750, 887] : [970, 0, 770, 887];
@@ -943,8 +961,8 @@
       ctx.restore();
       rect(x - Math.sign(shot.vx) * 11, y - 1, 6, 2, shot.friendly ? '#d7ffff' : '#ffb18a');
     }
-    drawHero(companion.x, companion.y, heroIndex === 0 ? 1 : 0, false, player.facing);
-    if (player.invulnerable <= 0 || Math.floor(elapsed * 12) % 2 === 0) drawHero(player.x, player.y, heroIndex, true, player.facing);
+    drawHero(companion.x, companion.y, heroIndex === 0 ? 1 : 0, false, player.facing, companion);
+    if (player.invulnerable <= 0 || Math.floor(elapsed * 12) % 2 === 0) drawHero(player.x, player.y, heroIndex, true, player.facing, player);
     drawEffects();
     for (const p of particles) rect(p.x - cam, p.y, 2, 2, p.color);
     if (boss && boss.alive && player.x > 1370) {
