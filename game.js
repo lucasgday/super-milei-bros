@@ -23,6 +23,8 @@
     level: document.getElementById('levelName'),
     score: document.getElementById('score'),
     mute: document.getElementById('mute'),
+    fullscreen: document.getElementById('fullscreen'),
+    fullscreenHelp: document.getElementById('fullscreenHelp'),
     ability: document.getElementById('abilityLabel'),
     roster: document.getElementById('rosterUnlock'),
   };
@@ -367,7 +369,28 @@
     ui.header.inert = false;
   }
 
+  function toggleFullscreen() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else if (document.fullscreenEnabled) {
+      document.documentElement.requestFullscreen().catch(() => {
+        message('AGREGÁ EL JUEGO A INICIO PARA OCULTAR LA BARRA', 3.5);
+      });
+    }
+  }
+
+  function syncFullscreenButton() {
+    ui.fullscreen.hidden = !document.fullscreenEnabled;
+    const mobile = window.matchMedia('(max-width: 780px), (hover: none) and (pointer: coarse)').matches;
+    ui.fullscreenHelp.hidden = !mobile || document.fullscreenEnabled || window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+    const active = Boolean(document.fullscreenElement);
+    ui.fullscreen.setAttribute('aria-label', active ? 'Salir de pantalla completa' : 'Pantalla completa');
+    ui.fullscreen.setAttribute('aria-pressed', String(active));
+    ui.fullscreen.textContent = active ? '⤡' : '⛶';
+  }
+
   function requestPlay() {
+    if (window.matchMedia('(max-width: 780px), (hover: none) and (pointer: coarse)').matches && !document.fullscreenElement) toggleFullscreen();
     startMusic();
     if (!portraitAllowed && window.matchMedia('(orientation: portrait) and (max-width: 780px), (orientation: portrait) and (hover: none) and (pointer: coarse)').matches) {
       ui.rotate.hidden = false;
@@ -1170,6 +1193,7 @@
   ui.play.addEventListener('click', requestPlay);
   ui.playPortrait.addEventListener('click', () => {
     portraitAllowed = true;
+    if (!document.fullscreenElement) toggleFullscreen();
     begin();
   });
   ui.rotateBack.addEventListener('click', () => {
@@ -1178,9 +1202,12 @@
     ui.play.focus();
   });
   window.addEventListener('resize', () => {
+    syncFullscreenButton();
     if (!ui.rotate.hidden && window.matchMedia('(orientation: landscape)').matches) begin();
   });
   ui.mobilePause.addEventListener('click', togglePause);
+  ui.fullscreen.addEventListener('click', toggleFullscreen);
+  document.addEventListener('fullscreenchange', syncFullscreenButton);
   ui.resume.addEventListener('click', togglePause);
   ui.mute.addEventListener('click', () => {
     muted = !muted;
@@ -1193,6 +1220,7 @@
   });
   loadLevel(0);
   setState('menu');
+  syncFullscreenButton();
   resizeCanvas();
   new ResizeObserver(resizeCanvas).observe(document.querySelector('.stage-shell'));
   ui.message.classList.remove('show');

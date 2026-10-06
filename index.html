@@ -4,8 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#101722">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="description" content="Super Milei Bros, un plataformas web open source protagonizado por Javier y Karina.">
   <title>Super Milei Bros</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./assets/icon-192.png">
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
@@ -15,6 +19,7 @@
       <div class="header-actions">
         <a href="https://github.com/lucasgday/super-milei-bros" class="source-link" id="sourceLink">CÓDIGO FUENTE ↗</a>
         <button id="mute" class="icon-button" type="button" aria-label="Silenciar" aria-pressed="true">♫</button>
+        <button id="fullscreen" class="icon-button mobile-fullscreen" type="button" aria-label="Pantalla completa" hidden>⛶</button>
         <button id="mobilePause" class="icon-button mobile-pause" type="button" aria-label="Pausar" aria-pressed="false">Ⅱ</button>
       </div>
     </header>
@@ -37,6 +42,7 @@
         <h1 id="overlayTitle">SUPER <em>MILEI</em> BROS</h1>
         <p id="overlayBody">Javier y Karina recorren una Argentina de caricatura. Una aventura independiente y no oficial, hecha con humor político.</p>
         <button class="primary-button" id="play" type="button">JUGAR <span>▶</span></button>
+        <p class="fullscreen-help" id="fullscreenHelp" hidden>Para jugar sin la barra del navegador, agregá el juego a la pantalla de inicio.</p>
       </div>
       <div class="rotate-prompt" id="rotatePrompt" role="dialog" aria-modal="true" aria-labelledby="rotateTitle" hidden>
         <div class="rotate-phone" aria-hidden="true"></div>
