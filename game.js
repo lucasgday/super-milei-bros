@@ -123,6 +123,7 @@
   let muted = false;
   let crowdNearby = false;
   let bossMarchStart = null;
+  let roarDuckUntil = 0;
   let portraitAllowed = false;
   let audio = null;
   let noiseBuffer = null;
@@ -198,7 +199,7 @@
       };
       const noise = (duration, volume, frequency, delay = 0) => {
         if (!noiseBuffer) {
-          noiseBuffer = audio.createBuffer(1, audio.sampleRate / 2, audio.sampleRate);
+          noiseBuffer = audio.createBuffer(1, audio.sampleRate, audio.sampleRate);
           const data = noiseBuffer.getChannelData(0);
           for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
         }
@@ -275,8 +276,10 @@
           tone(300, 105, .28, .13, 'sawtooth');
           break;
         case 'roar':
-          noise(.3, .18, 480);
-          tone(145, 65, .34, .13, 'sawtooth');
+          noise(.62, .24, 850);
+          noise(.43, .13, 1700, .08);
+          tone(240, 95, .7, .24, 'sawtooth');
+          tone(490, 190, .56, .12, 'triangle', .04);
           break;
         case 'shield':
           tone(440, 900, .26, .12, 'sine');
@@ -331,7 +334,7 @@
         track.volume = 0;
         continue;
       }
-      const target = track === active ? volume : 0;
+      const target = track === active ? volume * (elapsed < roarDuckUntil ? .2 : 1) : 0;
       if (target && track.paused) track.play().catch(() => {});
       track.volume += (target - track.volume) * Math.min(1, dt * 4);
       if (!target && track.volume < .01) track.volume = 0;
@@ -376,6 +379,7 @@
     bossMarch.pause();
     bossMarch.currentTime = 0;
     bossMarchStart = null;
+    roarDuckUntil = 0;
     lastLaughAt = -Infinity;
     crowdNearby = false;
     conanCollected = false;
@@ -515,6 +519,8 @@
       message('ESCUDO ESTRATÉGICO', .9);
       playSfx('shield');
     } else if (heroIndex === 0) {
+      roarDuckUntil = elapsed + .9;
+      musicTracks.forEach(({ audio: track }) => { track.volume *= .2; });
       message('¡RUGIDO DEL LEÓN!', .9);
       effect('roar', player.x + 7, player.y + 10, player.facing, .5);
       shots = shots.filter(shot => shot.friendly || Math.abs(shot.x - player.x) > 125);
