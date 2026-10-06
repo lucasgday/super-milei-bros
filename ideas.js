@@ -11,6 +11,7 @@
   const mobileLayout = window.matchMedia('(max-width: 780px), (hover: none) and (pointer: coarse)');
   let ideas = [];
   let available = false;
+  let paymentEnabled = false;
   let loading = false;
 
   function syncLayout() {
@@ -43,9 +44,9 @@
       description.textContent = idea.description;
       vote.type = 'button';
       vote.className = 'idea-vote';
-      vote.textContent = idea.voted ? `✓ VOTADO · ${idea.votes}` : `▲ VOTAR · ${idea.votes}`;
-      vote.setAttribute('aria-label', `${idea.voted ? 'Ya votaste' : 'Votar'}: ${idea.title}, ${idea.votes} votos`);
-      vote.disabled = !available || idea.voted;
+      vote.textContent = paymentEnabled ? `▲ ARS 1.000 · ${idea.votes}` : `▲ ${idea.votes} · PRÓXIMAMENTE`;
+      vote.setAttribute('aria-label', `Apoyar ${idea.title} con ARS 1.000. ${idea.votes} votos confirmados.`);
+      vote.disabled = !paymentEnabled;
       vote.addEventListener('click', () => submitVote(idea, vote));
       content.append(heading, description);
       row.append(content, vote);
@@ -63,7 +64,7 @@
     try {
       const response = await fetch('./ideas.json', { cache: 'no-store' });
       if (!response.ok) throw new Error();
-      ideas = (await response.json()).map(idea => ({ ...idea, votes: 0, voted: false }));
+      ideas = (await response.json()).map(idea => ({ ...idea, votes: 0 }));
       status.textContent = 'Actualizando votos…';
       render();
     } catch {
@@ -73,11 +74,13 @@
     if (data) {
       ideas = data.ideas;
       available = data.available;
+      paymentEnabled = data.paymentEnabled;
       form.hidden = !available;
-      status.textContent = available ? '' : 'Votos y envíos disponibles en la versión online.';
+      status.textContent = paymentEnabled ? '' : available ? 'Los votos pagos estarán disponibles pronto.' : 'Votos y envíos disponibles en la versión online.';
       render();
     } else {
       available = false;
+      paymentEnabled = false;
       form.hidden = true;
       status.textContent = ideas.length ? 'Votos y envíos no disponibles en este momento.' : 'No pudimos cargar las propuestas. Probá de nuevo más tarde.';
       render();
@@ -87,22 +90,19 @@
 
   async function submitVote(idea, vote) {
     vote.disabled = true;
-    status.textContent = 'Registrando voto…';
+    status.textContent = 'Abriendo Mercado Pago…';
     try {
-      const response = await fetch('/api/ideas', {
+      const response = await fetch('/api/paid-votes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'vote', id: idea.id }),
+        body: JSON.stringify({ id: idea.id }),
       });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'No se pudo registrar el voto.');
-      idea.votes = result.votes;
-      idea.voted = true;
-      status.textContent = '¡Voto registrado!';
-      render();
+      if (!response.ok) throw new Error(result.error || 'No se pudo iniciar el pago.');
+      window.location.assign(result.url);
     } catch (error) {
-      await load();
       status.textContent = error.message;
+      vote.disabled = false;
     }
   }
 

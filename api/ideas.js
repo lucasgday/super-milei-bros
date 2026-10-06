@@ -1,10 +1,9 @@
 const crypto = require('node:crypto');
 
 const ideas = require('../ideas.json');
+const { paidVotesKey, enabled: paidVotesEnabled } = require('./lib/vote-payments');
 
-const votesKey = 'super-milei-bros:ideas:votes-v1';
 const pendingKey = 'super-milei-bros:ideas:pending-v1';
-const voteScript = "if redis.call('EXISTS', KEYS[1]) == 1 then return -1 end redis.call('SET', KEYS[1], '1', 'EX', ARGV[2]) return redis.call('HINCRBY', KEYS[2], ARGV[1], 1)";
 const suggestScript = "local count = redis.call('INCR', KEYS[1]) if count == 1 then redis.call('EXPIRE', KEYS[1], 86400) end if count > 2 then return 0 end redis.call('RPUSH', KEYS[2], ARGV[1]) return 1";
 const redisUrl = () => process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
 const redisToken = () => process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
@@ -32,15 +31,12 @@ module.exports = async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      if (!available) return res.status(200).json({ ideas: ideas.map(idea => ({ ...idea, votes: 0, voted: false })), available: false });
-      const digest = visitorDigest(req);
-      const [counts, voted] = await Promise.all([
-        redis(['HMGET', votesKey, ...ideas.map(idea => idea.id)]),
-        redis(['MGET', ...ideas.map(idea => `super-milei-bros:ideas:voter:${idea.id}:${digest}`)]),
-      ]);
+      if (!available) return res.status(200).json({ ideas: ideas.map(idea => ({ ...idea, votes: 0 })), available: false, paymentEnabled: false });
+      const counts = await redis(['HMGET', paidVotesKey, ...ideas.map(idea => idea.id)]);
       return res.status(200).json({
-        ideas: ideas.map((idea, index) => ({ ...idea, votes: Number(counts[index] || 0), voted: Boolean(voted[index]) })),
+        ideas: ideas.map((idea, index) => ({ ...idea, votes: Number(counts[index] || 0) })),
         available: true,
+        paymentEnabled: paidVotesEnabled(),
       });
     }
 
@@ -52,12 +48,7 @@ module.exports = async function handler(req, res) {
 
     const digest = visitorDigest(req);
     if (req.body?.action === 'vote') {
-      const idea = ideas.find(item => item.id === req.body.id);
-      if (!idea) return res.status(400).json({ error: 'Propuesta inválida.' });
-      const voterKey = `super-milei-bros:ideas:voter:${idea.id}:${digest}`;
-      const votes = Number(await redis(['EVAL', voteScript, 2, voterKey, votesKey, idea.id, 2592000]));
-      if (votes === -1) return res.status(409).json({ error: 'Ya votaste esta propuesta.' });
-      return res.status(200).json({ votes });
+      return res.status(410).json({ error: 'Los votos gratuitos terminaron. Elegí la propuesta para apoyar con Mercado Pago.' });
     }
 
     if (req.body?.action === 'suggest') {

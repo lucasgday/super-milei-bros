@@ -16,9 +16,8 @@ function response() {
 
 const request = body => ({ method: 'POST', body, headers: { 'x-forwarded-for': '198.51.100.1' }, socket: {} });
 
-test('lists curated ideas, counts votes once per visitor, and holds suggestions for review', async () => {
+test('lists curated ideas, disables free votes, and holds suggestions for review', async () => {
   const counts = new Map();
-  const voters = new Set();
   const pending = [];
   let suggestions = 0;
   const originalFetch = global.fetch;
@@ -26,17 +25,6 @@ test('lists curated ideas, counts votes once per visitor, and holds suggestions 
     const [command, ...args] = JSON.parse(options.body);
     let result;
     if (command === 'HMGET') result = args.slice(1).map(id => counts.get(id) || null);
-    if (command === 'MGET') result = args.map(key => voters.has(key) ? '1' : null);
-    if (command === 'EVAL' && args[2].includes(':voter:')) {
-      const voterKey = args[2];
-      const id = args[4];
-      if (voters.has(voterKey)) result = -1;
-      else {
-        voters.add(voterKey);
-        result = (counts.get(id) || 0) + 1;
-        counts.set(id, result);
-      }
-    }
     if (command === 'EVAL' && args[2].includes(':suggest-rate:')) {
       suggestions++;
       result = suggestions <= 2 ? 1 : 0;
@@ -50,21 +38,11 @@ test('lists curated ideas, counts votes once per visitor, and holds suggestions 
     assert.equal(listed.statusCode, 200);
     assert.equal(listed.body.ideas.length, 3);
     assert.equal(listed.body.ideas[0].votes, 0);
+    assert.equal(listed.body.paymentEnabled, false);
 
     const voted = response();
     await handler(request({ action: 'vote', id: 'atlantico-sur' }), voted);
-    assert.equal(voted.statusCode, 200);
-    assert.equal(voted.body.votes, 1);
-    const duplicate = response();
-    await handler(request({ action: 'vote', id: 'atlantico-sur' }), duplicate);
-    assert.equal(duplicate.statusCode, 409);
-    const votedList = response();
-    await handler({ method: 'GET', headers: request().headers, socket: {} }, votedList);
-    assert.equal(votedList.body.ideas[0].voted, true);
-    assert.equal(votedList.body.ideas[0].votes, 1);
-    const unknown = response();
-    await handler(request({ action: 'vote', id: 'missing' }), unknown);
-    assert.equal(unknown.statusCode, 400);
+    assert.equal(voted.statusCode, 410);
 
     const title = 'Un nuevo personaje';
     const description = 'Podría tener una habilidad distinta en el siguiente nivel.';
