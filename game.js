@@ -42,6 +42,9 @@
     shareButton: document.getElementById('shareButton'),
     shareStatus: document.getElementById('shareStatus'),
     decisionPanel: document.getElementById('decisionPanel'),
+    decisionTitle: document.getElementById('decisionTitle'),
+    decisionBody: document.getElementById('decisionBody'),
+    decisionSources: document.querySelector('.decision-sources'),
     duoSelector: document.getElementById('duoSelector'),
   };
   const sprites = {
@@ -160,6 +163,41 @@
     },
   ];
 
+  const decisions = {
+    cabinet: {
+      title: 'CRISIS DE GABINETE',
+      body: 'Investigan reformas en la casa de Adorni. El contratista declaró US$245.000, incluida una cascada de US$3.500; la defensa sostiene US$175.000. La Justicia aún investiga.',
+      sources: [
+        ['OBRAS ↗', 'https://www.infobae.com/judiciales/2026/05/05/asi-es-la-cascada-que-manuel-adorni-ordeno-construir-en-la-pileta-de-su-casa-del-country-indio-cua/'],
+        ['DESCARGO Y CAUSA ↗', 'https://www.infobae.com/judiciales/2026/09/23/la-justicia-estudia-las-billeteras-virtuales-de-adorni-investigaran-la-trazabilidad-de-los-bitcoins/'],
+      ],
+      choices: [
+        { id: 'keep', label: 'SOSTENERLO', detail: 'Más periodistas y sobres en el camino. Más puntos por superarlos.',
+          hazards: [['reporter', 1040, 208], ['envelope', 1140, 138], ['reporter', 1265, 208], ['envelope', 1330, 129]],
+          message: 'ADORNI SIGUE · PRENSA Y SOBRES EN EL CAMINO' },
+        { id: 'dismiss', label: 'PEDIRLE LA RENUNCIA', detail: 'Críticas de aliados en el camino. Ruta menos difícil.',
+          hazards: [['criticism', 1090, 138], ['criticism', 1270, 126]],
+          message: 'ADORNI RENUNCIA · LLEGAN CRÍTICAS DE ALIADOS' },
+      ],
+    },
+    libra: {
+      title: 'EL CASO $LIBRA',
+      body: 'Milei difundió el lanzamiento de $LIBRA y luego borró la publicación. El Gobierno ordenó investigar posibles irregularidades. En esta ficción, ¿cómo responde la dupla?',
+      sources: [
+        ['COMUNICADO OFICIAL ↗', 'https://www.argentina.gob.ar/noticias/anuncio-oficial'],
+        ['DECRETO 114/2025 ↗', 'https://www.argentina.gob.ar/normativa/nacional/norma-409850/texto'],
+      ],
+      choices: [
+        { id: 'audit', label: 'ABRIR LA INVESTIGACIÓN', detail: 'Llegan críticas, pero el camino es más seguro.',
+          hazards: [['criticism', 1050, 126], ['criticism', 1240, 128]],
+          message: 'INVESTIGACIÓN ABIERTA · LLEGAN CRÍTICAS' },
+        { id: 'promote', label: 'SEGUIR PROMOCIONANDO', detail: 'Ruta ficticia: más econochantas y agoreros. Más puntos por superarlos.',
+          hazards: [['econochanta', 1030, 208], ['agorero', 1145, 208], ['econochanta', 1260, 208]],
+          message: 'RESPALDO FICTICIO · ECONOCHANTAS EN EL CAMINO' },
+      ],
+    },
+  };
+
   let state = 'menu';
   let levelIndex = new URLSearchParams(window.location.search).get('level') === '2' ? 1 : 0;
   let pendingLevel = 0;
@@ -203,7 +241,9 @@
   let lastLaughAt = -Infinity;
   let lastFrame = performance.now();
   let scoreSubmitted = false;
-  let decisionShown = false;
+  const decisionsShown = new Set();
+  let activeDecision = null;
+  let controlsPausedGame = false;
   try { unlockedPatricia = localStorage.getItem('smb-patricia-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
   try { unlockedLevel2 = localStorage.getItem('smb-level2-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
   ui.level2Start.hidden = !unlockedLevel2;
@@ -505,7 +545,8 @@
     heroLabelUntil = 2.5;
     bossLabelUntil = 0;
     bossIntroduced = false;
-    decisionShown = false;
+    decisionsShown.clear();
+    activeDecision = null;
     ui.decisionPanel.hidden = true;
     syncUi();
     message(`NIVEL 1-${index + 1}: ${data.name}`, 2.1);
@@ -698,8 +739,26 @@
     message('¡CUIDADO! UNA VIDA MENOS', 1.3);
   }
 
-  function showDecision() {
-    decisionShown = true;
+  function showDecision(kind) {
+    const decision = decisions[kind];
+    decisionsShown.add(kind);
+    activeDecision = kind;
+    ui.decisionTitle.textContent = decision.title;
+    ui.decisionBody.textContent = decision.body;
+    ui.decisionPanel.querySelectorAll('[data-decision]').forEach((button, index) => {
+      const choice = decision.choices[index];
+      button.dataset.decision = choice.id;
+      button.querySelector('strong').textContent = choice.label;
+      button.querySelector('small').textContent = choice.detail;
+    });
+    ui.decisionSources.replaceChildren(...decision.sources.map(([label, url]) => {
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = label;
+      return link;
+    }));
     held.clear();
     setState('decision');
     ui.decisionPanel.hidden = false;
@@ -708,18 +767,19 @@
   }
 
   function chooseDecision(choice) {
-    const hazards = choice === 'keep'
-      ? [['reporter', 1040, 208], ['envelope', 1140, 138], ['reporter', 1265, 208], ['envelope', 1330, 129]]
-      : [['criticism', 1090, 138], ['criticism', 1270, 126]];
-    for (const [type, x, y] of hazards) {
-      enemies.push({ type, x, y, w: type === 'reporter' ? 18 : 21, h: type === 'reporter' ? 22 : 16,
+    const selected = decisions[activeDecision]?.choices.find(item => item.id === choice);
+    if (!selected) return;
+    for (const [type, x, y] of selected.hazards) {
+      const groundEnemy = ['reporter', 'econochanta', 'agorero'].includes(type);
+      enemies.push({ type, x, y, w: type === 'reporter' ? 18 : groundEnemy ? 20 : 21, h: groundEnemy ? 22 : 16,
         startX: x, startY: y, direction: -1, hp: 2, alive: true, phase: Math.random() * 6 });
       encountered.add(type);
     }
     ui.decisionPanel.hidden = true;
+    activeDecision = null;
     setState('playing');
     canvas.focus();
-    message(choice === 'keep' ? 'ADORNI SIGUE · PRENSA Y SOBRES EN EL CAMINO' : 'ADORNI RENUNCIA · LLEGAN CRÍTICAS DE ALIADOS', 3, 'enemy');
+    message(selected.message, 3, 'enemy');
     playSfx('switch');
     syncMusic();
   }
@@ -905,8 +965,9 @@
     companion.stride += Math.abs(companion.x - companionX) / 14;
     companion.y += (player.y - companion.y) * Math.min(1, dt * 9);
     cam = clamp(player.x - W * .32, 0, Math.max(0, WORLD - W));
-    if (levelIndex === 0 && !decisionShown && player.x >= 950 && player.grounded) {
-      showDecision();
+    const decisionKind = levelIndex === 0 ? 'cabinet' : 'libra';
+    if (!decisionsShown.has(decisionKind) && player.x >= 950 && player.grounded) {
+      showDecision(decisionKind);
       return;
     }
     syncMusic(dt);

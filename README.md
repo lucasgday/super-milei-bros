@@ -51,6 +51,8 @@ La propuesta sobre Adorni es una bifurcación ficticia, no una afirmación de cu
 
 En Buenos Aires, una decisión de gabinete detiene la partida una vez: sostener a Adorni suma periodistas y sobres que dan más puntos al superarlos; pedirle la renuncia suma menos obstáculos, representados como críticas de aliados. Es una línea temporal ficticia y ambas opciones permiten completar el nivel.
 
+En Córdoba, el caso $LIBRA plantea otra bifurcación ficticia: abrir una investigación deja una ruta más segura con críticas, mientras seguir promocionando el proyecto suma econochantas y agoreros. El hecho documentado es que Milei difundió el lanzamiento en redes, luego retiró la publicación y el Gobierno ordenó investigar posibles irregularidades; las opciones y consecuencias del juego no afirman culpabilidad ni representan lo que ocurrió después. Fuentes: [comunicado oficial](https://www.argentina.gob.ar/noticias/anuncio-oficial) y [Decreto 114/2025](https://www.argentina.gob.ar/normativa/nacional/norma-409850/texto).
+
 La banda sonora toma como referencia el rock guitarrero, el new wave y las marchas de la cultura política argentina, sin usar grabaciones, melodías ni arreglos de las canciones mencionadas. Cambia de pista sin superponerlas al acercarse a una multitud o avanzar por el nivel; el combate con Cristina abre con una marcha breve y continúa con rock más pesado. Las licencias de los audios son independientes de la licencia MIT del código:
 
 - `assets/avenida-rock.mp3`: [Rock Theme Song (loop)](https://opengameart.org/content/rock-theme-song), Umplix, CC0; convertido de WAV a MP3 para la web.
