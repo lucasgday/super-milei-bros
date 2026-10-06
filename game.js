@@ -123,6 +123,7 @@
   let muted = false;
   let crowdNearby = false;
   let bossMarchStart = null;
+  let activeTrack = null;
   let roarDuckUntil = 0;
   let portraitAllowed = false;
   let audio = null;
@@ -173,7 +174,6 @@
     if (state !== 'playing' && state !== 'paused') return;
     setState(state === 'playing' ? 'paused' : 'playing');
     ui.pause.hidden = state !== 'paused';
-    if (state === 'playing') startMusic();
     syncMusic();
   }
 
@@ -307,13 +307,6 @@
     } catch { /* Sound is optional. */ }
   }
 
-  function startMusic() {
-    if (muted) return;
-    for (const { audio: track } of musicTracks) {
-      if (track.loop && track.paused) track.play().catch(() => {});
-    }
-  }
-
   function syncMusic(dt = 0) {
     const distance = player ? Math.min(Infinity, ...enemies
       .filter(enemy => enemy.alive && enemy.type === 'piquetero')
@@ -328,18 +321,25 @@
       bossMarch.currentTime = 0;
     }
     if (bossEncounter) active = elapsed - bossMarchStart < 7 ? bossMarch : bossTrack;
-    for (const { audio: track, volume } of musicTracks) {
-      if (muted || state !== 'playing') {
+    if (muted || state !== 'playing') {
+      for (const { audio: track } of musicTracks) {
         track.pause();
         track.volume = 0;
-        continue;
       }
-      const target = track === active ? volume * (elapsed < roarDuckUntil ? .2 : 1) : 0;
-      if (target && track.paused) track.play().catch(() => {});
-      track.volume += (target - track.volume) * Math.min(1, dt * 4);
-      if (!target && track.volume < .01) track.volume = 0;
-      if (track === bossMarch && !target && track.volume === 0) track.pause();
+      activeTrack = null;
+      return;
     }
+    if (activeTrack !== active) {
+      for (const { audio: track } of musicTracks) {
+        if (track !== active) track.pause();
+        track.volume = 0;
+      }
+      activeTrack = active;
+    }
+    const volume = musicTracks.find(({ audio: track }) => track === active).volume;
+    const target = volume * (elapsed < roarDuckUntil ? .2 : 1);
+    if (active.paused) active.play().catch(() => {});
+    active.volume += (target - active.volume) * Math.min(1, dt * 4);
   }
 
   function message(text, seconds = 2) {
@@ -379,6 +379,7 @@
     bossMarch.pause();
     bossMarch.currentTime = 0;
     bossMarchStart = null;
+    activeTrack = null;
     roarDuckUntil = 0;
     lastLaughAt = -Infinity;
     crowdNearby = false;
@@ -433,7 +434,6 @@
 
   function requestPlay() {
     if (window.matchMedia('(max-width: 780px), (hover: none) and (pointer: coarse)').matches && !document.fullscreenElement) toggleFullscreen();
-    startMusic();
     if (!portraitAllowed && window.matchMedia('(orientation: portrait) and (max-width: 780px), (orientation: portrait) and (hover: none) and (pointer: coarse)').matches) {
       ui.rotate.hidden = false;
       ui.overlay.inert = true;
@@ -1269,7 +1269,6 @@
     ui.mute.setAttribute('aria-pressed', String(!muted));
     ui.mute.setAttribute('aria-label', muted ? 'Activar sonido' : 'Silenciar');
     ui.mute.textContent = muted ? '♪' : '♫';
-    if (!muted && state === 'playing') startMusic();
     syncMusic();
     playSfx('mute');
   });

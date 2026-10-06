@@ -15,7 +15,7 @@ Abrí `index.html` en un navegador moderno. También podés servir la carpeta co
 | Cambiar Javier / Karina | Q |
 | Pausar | P |
 
-En móvil, usá las flechas de la izquierda para moverte y los botones de la derecha para atacar, saltar, usar el poder y cambiar de personaje. Los controles quedan debajo del escenario tanto en vertical como en horizontal y admiten dos dedos a la vez. También siguen disponibles los gestos sobre el escenario: mantener pulsada la mitad izquierda para moverse; tocar la mitad derecha para saltar, deslizar a los lados para atacar, hacia arriba para la habilidad o hacia abajo para cambiar. La pausa queda arriba a la derecha.
+En móvil, usá las flechas de la izquierda para moverte y los botones de la derecha para atacar, saltar, usar el poder y cambiar de personaje. Los controles transparentes flotan sobre el escenario tanto en vertical como en horizontal y admiten dos dedos a la vez. También siguen disponibles los gestos sobre el escenario: mantener pulsada la mitad izquierda para moverse; tocar la mitad derecha para saltar, deslizar a los lados para atacar, hacia arriba para la habilidad o hacia abajo para cambiar. La pausa queda arriba a la derecha.
 
 Al tocar JUGAR en móvil, el juego solicita pantalla completa cuando el navegador la admite; el botón ⛶ permite volver a activarla o salir. Si el navegador no ofrece esa API, agregá el sitio a la pantalla de inicio y abrilo desde su ícono para jugar sin la barra de direcciones.
 
@@ -23,7 +23,7 @@ Al tocar JUGAR en móvil, el juego solicita pantalla completa cuando el navegado
 
 No hay dependencias ni compilación. El juego está hecho con Canvas 2D, JavaScript y CSS. Los fondos y objetos se dibujan en `game.js`; los sprites están en `assets/`. Cada personaje jugable tiene una tira animada de cuatro cuadros (quieto, dos de carrera y ataque), declarada en `heroes` mediante `sprite`; ese formato también se usará para los próximos personajes. La música se reproduce al empezar la partida y se puede silenciar desde el botón superior. Los efectos de sonido se sintetizan en el navegador con Web Audio.
 
-La banda sonora toma como referencia el rock guitarrero, el new wave y las marchas de la cultura política argentina, sin usar grabaciones, melodías ni arreglos de las canciones mencionadas. Cambia con un fundido al acercarse a una multitud o avanzar por el nivel; el combate con Cristina abre con una marcha breve y continúa con rock más pesado. Las licencias de los audios son independientes de la licencia MIT del código:
+La banda sonora toma como referencia el rock guitarrero, el new wave y las marchas de la cultura política argentina, sin usar grabaciones, melodías ni arreglos de las canciones mencionadas. Cambia de pista sin superponerlas al acercarse a una multitud o avanzar por el nivel; el combate con Cristina abre con una marcha breve y continúa con rock más pesado. Las licencias de los audios son independientes de la licencia MIT del código:
 
 - `assets/avenida-rock.mp3`: [Rock Theme Song (loop)](https://opengameart.org/content/rock-theme-song), Umplix, CC0; convertido de WAV a MP3 para la web.
 - `assets/ciudad-new-wave.mp3`: [The Way It Is](https://opengameart.org/content/the-way-it-is), Zane Little Music, CC0; recomprimido para la web.

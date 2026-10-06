@@ -124,3 +124,20 @@
   .mobile-controls .secondary-controls button{width:40px}
   .mobile-controls .secondary-controls small{font-size:7px}
 }
+@media (max-width:780px), (hover:none) and (pointer:coarse){
+  .app{position:relative;padding:0}
+  .stage-shell{position:absolute;inset:0;width:100%;height:100%;flex:none}
+  .header{position:absolute;z-index:7;top:0;left:0;right:0;min-height:0;margin:0;padding:calc(4px + env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) 0 max(8px,env(safe-area-inset-left));justify-content:flex-end;background:none;border:0;pointer-events:none}
+  .header .logo{display:none}
+  .header-actions{pointer-events:auto}
+  .header-actions .icon-button{width:42px;height:42px;background:#10233399;border-color:#bad2d080;color:#fff7dd;backdrop-filter:blur(3px)}
+  .hud{top:calc(48px + env(safe-area-inset-top));padding:5px max(10px,env(safe-area-inset-right)) 18px max(10px,env(safe-area-inset-left));background:linear-gradient(#09121d99,#09121d00);pointer-events:none}
+  .message{top:calc(94px + env(safe-area-inset-top))}
+  .mobile-controls{position:absolute;z-index:5;left:0;right:0;bottom:0;min-height:0;padding:8px max(10px,env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));background:none;border:0;pointer-events:none}
+  .movement-controls,.action-controls,.secondary-controls{pointer-events:none}
+  .mobile-controls button{pointer-events:auto;background:#19374666;border-color:#e2f0ed88;box-shadow:0 2px 8px #07131c55;color:#fff}
+  .mobile-controls .attack-control{background:#176d6477;border-color:#c6f4e8aa}
+  .mobile-controls .jump-control{background:#ba583c77;border-color:#ffe0b5aa}
+  .mobile-controls .secondary-controls button{height:44px;background:#19374666;border-color:#e2f0ed88}
+  .mobile-controls button.is-held{background:#426a7bcc;filter:brightness(1.2)}
+}
