@@ -190,6 +190,15 @@ body:not([data-game-state="menu"]) .ranking-preview{display:none}
 .duo-avatar-javier{background-image:url('./assets/heroes-small.png');background-position:left center;background-size:200% 100%}
 .duo-avatar-karina{background-image:url('./assets/heroes-small.png');background-position:right center;background-size:200% 100%}
 .duo-avatar-patricia{background-image:url('./assets/patricia-small.png');background-position:center center;background-size:contain;background-repeat:no-repeat}
+.duo-avatar-toto{background-image:url('./assets/toto-animated-small.png');background-position:left center;background-size:400% 100%}
+.duo-avatar-sturzenegger{background-image:url('./assets/sturzenegger-animated-small.png');background-position:left center;background-size:400% 100%}
+.notice-page{max-width:760px;margin:0 auto;padding:34px 20px 64px;color:#e3e9e7;line-height:1.65}
+.notice-page h1{font-size:36px;line-height:1.2;color:#ffe186}
+.notice-page h2{font-size:19px;margin:34px 0 8px;color:#93dfcd}
+.notice-page p{margin:10px 0;font-size:16px}
+.notice-page a{color:#8ccbd0}
+.notice-back{display:inline-block;min-height:44px;padding:10px 0;font-size:13px;font-weight:700;text-decoration:none}
+@media(max-width:520px){.notice-page h1{font-size:28px}}
 .duo-options{display:flex;gap:5px;min-width:0}
 .duo-options button{min-height:36px;padding:5px 9px;border:1px solid #779fa3;border-radius:3px;background:#173542;color:#e2eeee;font:700 11px 'Space Grotesk',Arial,sans-serif}
 .duo-options button strong,.duo-options button small{display:block;white-space:normal}
