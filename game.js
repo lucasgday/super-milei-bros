@@ -1377,12 +1377,11 @@
       ctx.restore();
     }
     if (levelIndex === 2 && sprites.casta.complete && sprites.casta.naturalWidth) {
-      const cropWidth = sprites.casta.naturalWidth / 3;
       ctx.save();
       ctx.imageSmoothingEnabled = true;
-      for (const [worldX, index, width, height] of [[135, 0, 235, 142], [615, 1, 195, 138], [1085, 2, 225, 137]]) {
+      for (const [worldX, sx, sw, width, height] of [[135, 0, 438, 235, 142], [615, 438, 324, 195, 138], [1085, 762, 324, 225, 137]]) {
         const x = worldX - cam;
-        if (x + width > 0 && x < W) ctx.drawImage(sprites.casta, index * cropWidth, 0, cropWidth, sprites.casta.naturalHeight, x, 230 - height, width, height);
+        if (x + width > 0 && x < W) ctx.drawImage(sprites.casta, sx, 0, sw, sprites.casta.naturalHeight, x, 230 - height, width, height);
       }
       ctx.restore();
     }

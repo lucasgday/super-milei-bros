@@ -55,6 +55,8 @@ El botón IDEAS lleva a las propuestas debajo del juego en escritorio; en móvil
 
 ### Votos pagos con Mercado Pago
 
+**Compatibilidad pendiente:** esta versión del servidor crea preferencias con `/checkout/preferences` y espera Webhooks del evento `payment`. El evento **Order (Mercado Pago)** de Checkout Pro con API de Orders usa `/v1/orders`, IDs de orden y otro formato de notificación: sus claves de firma no pueden conectarse sin adaptar y probar el flujo. No cargues las credenciales de producción ni actives `MP_VOTES_ENABLED` para una aplicación configurada sólo con `order`.
+
 El código es público; las credenciales son privadas y **nunca** deben agregarse al repositorio ni enviarse por chat. Para preparar la integración:
 
 1. En [Mercado Pago Developers](https://www.mercadopago.com.ar/developers/es/docs/getting-started), creá una aplicación de pagos online con **Checkout Pro** para ventas propias. Obtené las [credenciales de prueba y producción](https://www.mercadopago.com.ar/developers/es/docs/credentials) de esa aplicación.
