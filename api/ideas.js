@@ -1,7 +1,7 @@
 const crypto = require('node:crypto');
 
 const ideas = require('../ideas.json');
-const { paidVotesKey, enabled: paidVotesEnabled } = require('./lib/vote-payments');
+const { paidVotesKey, enabled: paidVotesEnabled } = require('../lib/vote-payments');
 
 const pendingKey = 'super-milei-bros:ideas:pending-v1';
 const suggestScript = "local count = redis.call('INCR', KEYS[1]) if count == 1 then redis.call('EXPIRE', KEYS[1], 86400) end if count > 2 then return 0 end redis.call('RPUSH', KEYS[2], ARGV[1]) return 1";

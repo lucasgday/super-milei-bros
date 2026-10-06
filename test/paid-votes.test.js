@@ -10,7 +10,7 @@ process.env.MP_VOTES_ENABLED = 'true';
 
 const checkout = require('../api/paid-votes');
 const webhook = require('../api/mp-webhook');
-const { createReference, validWebhookSignature } = require('../api/lib/vote-payments');
+const { createReference, validWebhookSignature } = require('../lib/vote-payments');
 
 function response() {
   return {

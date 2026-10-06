@@ -1,5 +1,5 @@
 const ideas = require('../ideas.json');
-const { redis, enabled, paidVotesKey, voteAmount, ideaFromReference, validWebhookSignature } = require('./lib/vote-payments');
+const { redis, enabled, paidVotesKey, voteAmount, ideaFromReference, validWebhookSignature } = require('../lib/vote-payments');
 
 const applyPaymentScript = `
 local idea = redis.call('HGET', KEYS[1], 'idea')
