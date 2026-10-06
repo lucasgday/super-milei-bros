@@ -44,10 +44,10 @@
   sprites.cristina.src = './assets/cristina.png';
   sprites.enemies.src = './assets/enemies.png';
   sprites.crowd.src = './assets/piquetero-crowd.png';
-  const openingTrack = new Audio('./assets/unchained-destiny.mp3');
+  const openingTrack = new Audio('./assets/avenida-rock.mp3');
   openingTrack.loop = true;
   openingTrack.volume = 0;
-  const soundtrack = new Audio('./assets/flesh-and-blood.mp3');
+  const soundtrack = new Audio('./assets/ciudad-new-wave.mp3');
   soundtrack.loop = true;
   soundtrack.volume = 0;
   const crowdTrack = new Audio('./assets/crowd-rock.mp3');
@@ -56,11 +56,14 @@
   const bossTrack = new Audio('./assets/boss-battle.mp3');
   bossTrack.loop = true;
   bossTrack.volume = 0;
+  const bossMarch = new Audio('./assets/boss-march.mp3');
+  bossMarch.volume = 0;
   const musicTracks = [
     { audio: openingTrack, volume: .35 },
     { audio: soundtrack, volume: .34 },
     { audio: crowdTrack, volume: .38 },
     { audio: bossTrack, volume: .38 },
+    { audio: bossMarch, volume: .42 },
   ];
 
   let W = 480;
@@ -117,6 +120,7 @@
   let unlockedPatricia = false;
   let muted = false;
   let crowdNearby = false;
+  let bossMarchStart = null;
   let portraitAllowed = false;
   let audio = null;
   let noiseBuffer = null;
@@ -264,7 +268,7 @@
   function startMusic() {
     if (muted) return;
     for (const { audio: track } of musicTracks) {
-      if (track.paused) track.play().catch(() => {});
+      if (track.loop && track.paused) track.play().catch(() => {});
     }
   }
 
@@ -276,7 +280,12 @@
     else if (distance > 190) crowdNearby = false;
     let active = player && player.x > 860 ? soundtrack : openingTrack;
     if (crowdNearby && player && player.x <= 1390) active = crowdTrack;
-    if (boss && boss.alive && player && player.x > 1390) active = bossTrack;
+    const bossEncounter = boss && boss.alive && player && player.x > 1390;
+    if (bossEncounter && bossMarchStart === null) {
+      bossMarchStart = elapsed;
+      bossMarch.currentTime = 0;
+    }
+    if (bossEncounter) active = elapsed - bossMarchStart < 7 ? bossMarch : bossTrack;
     for (const { audio: track, volume } of musicTracks) {
       if (muted || state !== 'playing') {
         track.pause();
@@ -284,8 +293,10 @@
         continue;
       }
       const target = track === active ? volume : 0;
+      if (target && track.paused) track.play().catch(() => {});
       track.volume += (target - track.volume) * Math.min(1, dt * 4);
       if (!target && track.volume < .01) track.volume = 0;
+      if (track === bossMarch && !target && track.volume === 0) track.pause();
     }
   }
 
@@ -323,6 +334,9 @@
     soundtrack.currentTime = 0;
     crowdTrack.currentTime = 0;
     bossTrack.currentTime = 0;
+    bossMarch.pause();
+    bossMarch.currentTime = 0;
+    bossMarchStart = null;
     crowdNearby = false;
     conanCollected = false;
     shieldTime = 0;

@@ -21,11 +21,12 @@ En móvil, usá las flechas de la izquierda para moverte y los botones de la der
 
 No hay dependencias ni compilación. El juego está hecho con Canvas 2D, JavaScript y CSS. Los fondos y objetos se dibujan en `game.js`; los sprites están en `assets/`. Cada personaje jugable tiene una tira animada de cuatro cuadros (quieto, dos de carrera y ataque), declarada en `heroes` mediante `sprite`; ese formato también se usará para los próximos personajes. La música se reproduce al empezar la partida y se puede silenciar desde el botón superior. Los efectos de sonido se sintetizan en el navegador con Web Audio.
 
-La banda sonora tiene cuatro pistas de rock/punk con licencia CC0, no versiones ni arreglos de canciones existentes. La música cambia con un fundido al acercarse a una multitud, avanzar a la segunda mitad del nivel o entrar en el combate con Cristina:
+La banda sonora toma como referencia el rock guitarrero, el new wave y las marchas de la cultura política argentina, sin usar grabaciones, melodías ni arreglos de las canciones mencionadas. Cambia con un fundido al acercarse a una multitud o avanzar por el nivel; el combate con Cristina abre con una marcha breve y continúa con rock más pesado. Las licencias de los audios son independientes de la licencia MIT del código:
 
-- `assets/unchained-destiny.mp3`: [Unchained Destiny (loop)](https://opengameart.org/content/unchained-destiny-rock), nene, CC0; convertido de WAV a MP3 para la web.
+- `assets/avenida-rock.mp3`: [Rock Theme Song (loop)](https://opengameart.org/content/rock-theme-song), Umplix, CC0; convertido de WAV a MP3 para la web.
+- `assets/ciudad-new-wave.mp3`: [The Way It Is](https://opengameart.org/content/the-way-it-is), Zane Little Music, CC0; recomprimido para la web.
 - `assets/crowd-rock.mp3`: [Ghosts & Heroes (2025 remaster)](https://opengameart.org/content/ghosts-heroes), Bobjt, CC0.
-- `assets/flesh-and-blood.mp3`: [Flesh and Blood](https://opengameart.org/content/punk-hardcore), Alex McCulloch (Pro Sensory), CC0.
+- `assets/boss-march.mp3`: [March Two-Step](https://opengameart.org/content/march-two-step), tcarisland, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); fragmento de ocho segundos convertido a MP3 para la entrada del jefe.
 - `assets/boss-battle.mp3`: [Boss Battle 10 Metal](https://opengameart.org/content/boss-battle-10-metal), nene, CC0; convertido de WAV a MP3 para la web.
 
 ## Licencia
