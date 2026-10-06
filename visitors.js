@@ -5,7 +5,8 @@
     .then(response => response.ok ? response.json() : null)
     .then(data => {
       if (!data || !Number.isFinite(data.visitors)) return;
-      count.textContent = `${data.visitors.toLocaleString('es-AR')} VISITANTES ÚNICOS HOY ·`;
+      const label = data.visitors === 1 ? 'VISITANTE ÚNICO' : 'VISITANTES ÚNICOS';
+      count.textContent = `${data.visitors.toLocaleString('es-AR')} ${label} HOY ·`;
       count.hidden = false;
     })
     .catch(() => {});
