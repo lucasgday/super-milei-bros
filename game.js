@@ -27,6 +27,15 @@
     fullscreenHelp: document.getElementById('fullscreenHelp'),
     ability: document.getElementById('abilityLabel'),
     roster: document.getElementById('rosterUnlock'),
+    rankingButton: document.getElementById('rankingButton'),
+    rankingPanel: document.getElementById('rankingPanel'),
+    rankingClose: document.getElementById('rankingClose'),
+    rankingList: document.getElementById('rankingList'),
+    rankingStatus: document.getElementById('rankingStatus'),
+    scoreForm: document.getElementById('scoreForm'),
+    playerAlias: document.getElementById('playerAlias'),
+    shareButton: document.getElementById('shareButton'),
+    shareStatus: document.getElementById('shareStatus'),
   };
   const sprites = {
     heroes: new Image(),
@@ -133,6 +142,7 @@
   let noiseBuffer = null;
   let lastLaughAt = -Infinity;
   let lastFrame = performance.now();
+  let scoreSubmitted = false;
   try { unlockedPatricia = localStorage.getItem('smb-patricia-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
 
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
@@ -397,6 +407,8 @@
 
   function begin() {
     closeRotatePrompt();
+    ui.rankingPanel.hidden = true;
+    ui.shareStatus.textContent = '';
     score = 0;
     lives = 3;
     heroIndex = 0;
@@ -463,7 +475,53 @@
       ? `Cristina fue derrotada. ¡Patricia desbloqueada para la próxima partida! Puntaje: ${score}. La Casta llegará en futuros niveles.`
       : `Sumaste ${score} puntos. Podés volver a intentar el nivel desde el comienzo.`;
     ui.play.innerHTML = win ? 'JUGAR DE NUEVO <span>▶</span>' : 'REINTENTAR <span>▶</span>';
+    scoreSubmitted = false;
+    ui.scoreForm.hidden = !win;
+    ui.rankingPanel.hidden = false;
+    ui.rankingStatus.textContent = win ? 'Guardá tu puntaje para aparecer en el ranking.' : '';
+    loadRanking();
     playSfx(win ? 'victory' : 'defeat');
+  }
+
+  async function loadRanking() {
+    ui.rankingStatus.textContent = 'Cargando ranking…';
+    try {
+      const response = await fetch('/api/leaderboard');
+      if (!response.ok) throw new Error();
+      const { ranking } = await response.json();
+      ui.rankingList.replaceChildren();
+      ranking.forEach(({ alias, score: points }, index) => {
+        const row = document.createElement('li');
+        const name = document.createElement('span');
+        const value = document.createElement('strong');
+        name.textContent = `${index + 1}. ${alias}`;
+        value.textContent = Number(points).toLocaleString('es-AR');
+        row.append(name, value);
+        ui.rankingList.append(row);
+      });
+      ui.rankingStatus.textContent = ranking.length ? '' : 'Todavía no hay puntajes. ¡Estrená el ranking!';
+    } catch {
+      ui.rankingStatus.textContent = 'El ranking compartido no está disponible ahora.';
+    }
+  }
+
+  async function shareGame() {
+    const url = new URL(window.location.href);
+    url.search = '';
+    url.hash = '';
+    const text = state === 'won' || state === 'lost'
+      ? `Hice ${score.toLocaleString('es-AR')} puntos en Super Milei Bros. ¿Me superás?`
+      : 'Jugá Super Milei Bros. ¿Me superás?';
+    try {
+      if (navigator.share && window.matchMedia('(pointer: coarse)').matches) {
+        await navigator.share({ title: 'Super Milei Bros', text, url: url.href });
+      } else {
+        await navigator.clipboard.writeText(`${text} ${url.href}`);
+        ui.shareStatus.textContent = 'Enlace copiado para compartir.';
+      }
+    } catch (error) {
+      if (error.name !== 'AbortError') ui.shareStatus.textContent = 'No se pudo compartir. Copiá la dirección del juego.';
+    }
   }
 
   function hurt() {
@@ -1258,6 +1316,35 @@
     button.addEventListener('contextmenu', event => event.preventDefault());
   });
   ui.play.addEventListener('click', requestPlay);
+  ui.rankingButton.addEventListener('click', () => {
+    ui.rankingPanel.hidden = !ui.rankingPanel.hidden;
+    if (!ui.rankingPanel.hidden) loadRanking();
+  });
+  ui.rankingClose.addEventListener('click', () => { ui.rankingPanel.hidden = true; });
+  ui.shareButton.addEventListener('click', shareGame);
+  ui.scoreForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (state !== 'won' || scoreSubmitted) return;
+    const button = ui.scoreForm.querySelector('button');
+    button.disabled = true;
+    ui.rankingStatus.textContent = 'Guardando puntaje…';
+    try {
+      const response = await fetch('/api/leaderboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alias: ui.playerAlias.value, score }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'No se pudo guardar.');
+      scoreSubmitted = true;
+      ui.scoreForm.hidden = true;
+      await loadRanking();
+      ui.rankingStatus.textContent = '¡Puntaje guardado!';
+    } catch (error) {
+      ui.rankingStatus.textContent = error.message || 'No se pudo guardar el puntaje.';
+      button.disabled = false;
+    }
+  });
   ui.playPortrait.addEventListener('click', () => {
     portraitAllowed = true;
     if (!document.fullscreenElement) toggleFullscreen();

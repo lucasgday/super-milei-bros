@@ -144,3 +144,22 @@
   .mobile-controls .secondary-controls button{height:44px;background:#19374666;border-color:#e2f0ed88}
   .mobile-controls button.is-held{background:#426a7bcc;filter:brightness(1.2)}
 }
+.social-actions{display:flex;justify-content:center;gap:10px;margin-top:10px}
+.social-actions button,.ranking-panel button{min-height:36px;padding:7px 12px;border:1px solid #90c6c0;border-radius:3px;background:#163947;color:#f3f7e8;font:700 12px 'Space Grotesk',Arial,sans-serif}
+.social-actions button:hover,.ranking-panel button:hover{background:#256070}
+.share-status{min-height:16px;margin:5px 0 0!important;font-size:11px!important;color:#aee5d4!important}
+.ranking-panel{position:absolute;z-index:6;inset:5%;overflow:auto;padding:16px 22px;background:#102434f7;border:2px solid #78aeb1;box-shadow:0 12px 35px #0009;text-align:left;color:#fff}
+.overlay:has(.ranking-panel:not([hidden])){z-index:8}
+.ranking-panel[hidden],#scoreForm[hidden]{display:none}
+.ranking-head{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #638b91;padding-bottom:8px}
+.ranking-head strong{font-size:17px;color:#ffe18f}
+.ranking-head button{min-width:36px;font-size:23px;line-height:1;padding:2px}
+#scoreForm{display:flex;align-items:end;gap:8px;flex-wrap:wrap;margin-top:12px}
+#scoreForm label{width:100%;font-size:11px;font-weight:700;color:#a7d7d0}
+#scoreForm input{flex:1;min-width:130px;min-height:36px;padding:7px 9px;border:1px solid #86b8b8;border-radius:3px;background:#f5f7ef;color:#102434;font:600 14px 'Space Grotesk',Arial,sans-serif}
+#scoreForm button:disabled{opacity:.55;cursor:wait}
+#rankingStatus{margin:10px 0;color:#c5d9d8;font-size:12px}
+#rankingList{margin:0;padding:0;list-style:none;counter-reset:rank;max-width:540px}
+#rankingList li{display:flex;justify-content:space-between;gap:14px;padding:6px 2px;border-bottom:1px solid #486471;font-size:13px}
+#rankingList li strong{color:#ffe18f;font-variant-numeric:tabular-nums}
+@media(max-width:780px){.ranking-panel{inset:4%;padding:10px 12px}.ranking-head strong{font-size:14px}.social-actions{margin-top:6px}.social-actions button{font-size:11px;min-height:32px}}

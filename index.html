@@ -42,6 +42,21 @@
         <h1 id="overlayTitle">SUPER <em>MILEI</em> BROS</h1>
         <p id="overlayBody">Javier y Karina recorren una Argentina de caricatura. Una aventura independiente y no oficial, hecha con humor político.</p>
         <button class="primary-button" id="play" type="button">JUGAR <span>▶</span></button>
+        <div class="social-actions">
+          <button id="rankingButton" type="button">🏆 RANKING</button>
+          <button id="shareButton" type="button">↗ COMPARTIR</button>
+        </div>
+        <div class="ranking-panel" id="rankingPanel" hidden>
+          <div class="ranking-head"><strong>RANKING · NIVEL 1-1</strong><button id="rankingClose" type="button" aria-label="Cerrar ranking">×</button></div>
+          <form id="scoreForm" hidden>
+            <label for="playerAlias">TU ALIAS</label>
+            <input id="playerAlias" name="alias" type="text" maxlength="18" autocomplete="nickname" required placeholder="Tu nombre en el ranking">
+            <button type="submit">GUARDAR PUNTAJE</button>
+          </form>
+          <p id="rankingStatus" role="status" aria-live="polite"></p>
+          <ol id="rankingList"></ol>
+        </div>
+        <p class="share-status" id="shareStatus" role="status" aria-live="polite"></p>
         <p class="fullscreen-help" id="fullscreenHelp" hidden>Para jugar sin la barra del navegador, agregá el juego a la pantalla de inicio.</p>
       </div>
       <div class="rotate-prompt" id="rotatePrompt" role="dialog" aria-modal="true" aria-labelledby="rotateTitle" hidden>
