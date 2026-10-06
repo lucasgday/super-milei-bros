@@ -19,6 +19,7 @@
     storyBoss: document.getElementById('storyBoss'),
     play: document.getElementById('play'),
     level2Start: document.getElementById('level2Start'),
+    level3Start: document.getElementById('level3Start'),
     rotate: document.getElementById('rotatePrompt'),
     playPortrait: document.getElementById('playPortrait'),
     rotateBack: document.getElementById('rotateBack'),
@@ -66,20 +67,23 @@
     randomEnemies: new Image(),
     politicalEnemies: new Image(),
     schiaretti: new Image(),
+    mastiffs: new Image(),
+    decisionEnemies: new Image(),
+    casta: new Image(),
+    deficit: new Image(),
   };
-  sprites.heroes.src = './assets/heroes.png';
-  sprites.javierAnimated.src = './assets/javier-animated.png';
-  sprites.karinaAnimated.src = './assets/karina-animated.png';
-  sprites.patriciaAnimated.src = './assets/patricia-animated.png';
-  sprites.patricia.src = './assets/patricia.png';
-  sprites.cristina.src = './assets/cristina.png';
-  sprites.enemies.src = './assets/enemies.png';
-  sprites.crowd.src = './assets/piquetero-crowd.png';
-  sprites.buenosAires.src = './assets/buenos-aires-landmarks.png';
-  sprites.cordoba.src = './assets/cordoba-landmarks.png';
-  sprites.randomEnemies.src = './assets/random-enemies.png';
-  sprites.politicalEnemies.src = './assets/political-enemies.png';
-  sprites.schiaretti.src = './assets/schiaretti.png';
+  sprites.heroes.src = './assets/heroes-small.png';
+  sprites.javierAnimated.src = './assets/javier-animated-small.png';
+  sprites.karinaAnimated.src = './assets/karina-animated-small.png';
+  sprites.patriciaAnimated.src = './assets/patricia-animated-small.png';
+  sprites.patricia.src = './assets/patricia-small.png';
+  sprites.cristina.src = './assets/cristina-small.png';
+  sprites.enemies.src = './assets/enemies-small.png';
+  sprites.crowd.src = './assets/piquetero-crowd-small.png';
+  sprites.buenosAires.src = './assets/buenos-aires-landmarks-small.png';
+  sprites.randomEnemies.src = './assets/random-enemies-small.png';
+  sprites.politicalEnemies.src = './assets/political-enemies-small.png';
+  sprites.mastiffs.src = './assets/mastiffs-small.png';
   const openingTrack = new Audio('./assets/avenida-rock.mp3');
   openingTrack.loop = true;
   openingTrack.volume = 0;
@@ -119,11 +123,11 @@
   const buttonHeld = new Set();
   const controlPointers = new Map();
   const heroes = [
-    { name: 'JAVIER', speed: 133, jump: 285, ability: 'RUGIDO DEL LEÓN', sprite: sprites.javierAnimated,
+    { name: 'JAVIER', weapon: 'MOTOSIERRA', speed: 133, jump: 285, ability: 'RUGIDO DEL LEÓN', sprite: sprites.javierAnimated,
       crops: [[12, 472], [528, 472], [1040, 470], [1560, 604]] },
-    { name: 'KARINA', speed: 146, jump: 315, ability: 'ESCUDO ESTRATÉGICO', sprite: sprites.karinaAnimated,
+    { name: 'KARINA', weapon: 'PROYECTIL', speed: 146, jump: 315, ability: 'ESCUDO ESTRATÉGICO', sprite: sprites.karinaAnimated,
       crops: [[48, 448], [528, 500], [1072, 472], [1568, 604]] },
-    { name: 'PATRICIA', speed: 150, jump: 290, ability: 'EMBESTIDA', sprite: sprites.patriciaAnimated,
+    { name: 'PATRICIA', weapon: 'TASER', speed: 150, jump: 290, ability: 'EMBESTIDA', sprite: sprites.patriciaAnimated,
       crops: [[48, 448], [580, 452], [1096, 432], [1576, 584]] },
   ];
 
@@ -147,6 +151,16 @@
       ['zurdo', 1000, 208], ['bill', 1100, 130], ['noqui', 1180, 208, true], ['sindigarca', 1280, 208], ['bill', 1475, 130],
     ],
     coins: [[135, 164], [190, 158], [328, 138], [510, 151], [675, 126], [810, 161], [1020, 150], [1190, 127], [1340, 163], [1515, 150]],
+  }, {
+    name: 'CONGRESO · LA CASTA', sky: '#8baab4', far: '#627c84', near: '#3b5961',
+    bossName: 'DÉFICIT FISCAL',
+    ground: [[0, 395], [440, 870], [920, 1370], [1420, WORLD]],
+    ledges: [[160, 185, 85], [310, 164, 70], [525, 180, 82], [695, 158, 74], [810, 185, 65], [1040, 176, 84], [1210, 154, 78], [1480, 180, 80]],
+    enemies: [
+      ['sindigarca', 235, 208], ['ensobrado', 530, 208], ['agorero', 705, 208], ['noqui', 835, 208, true],
+      ['econochanta', 1035, 208], ['ensobrado', 1195, 208], ['sindigarca', 1300, 208], ['bill', 1490, 136],
+    ],
+    coins: [[135, 157], [182, 157], [320, 135], [525, 152], [690, 128], [810, 155], [1035, 147], [1205, 126], [1325, 151], [1505, 153]],
   }];
 
   const storyScenes = [
@@ -159,12 +173,20 @@
       outroSource: 'https://www.casarosada.gob.ar/slider-principal/51181-discurso-del-presidente-de-la-nacion-javier-milei-en-la-apertura-del-144-periodo-de-sesiones-ordinarias-del-congreso-de-la-nacion',
     },
     {
-      introTitle: 'LA BATALLA DE LA ECONOMÍA',
-      intro: '“La Docta, Córdoba, corazón productivo de nuestra Nación”, dijo Milei. Bajo sus torres, la dupla avanza contra la inflación. ¡Vamos, los leones!',
+      introTitle: 'QUE TRUENEN LAS CADENAS',
+      intro: '“Los invito a emprender una gesta generacional”, dijo Milei en Córdoba. En esta ficción, el camino hacia la libertad atraviesa una ciudad sitiada por la inflación.',
       introSource: 'https://www.casarosada.gob.ar/informacion/discursos/50514-cadena-nacional-del-presidente-de-la-nacion-javier-milei-en-el-dia-de-la-conmemoracion-del-aniversario-numero-214-de-la-revolucion-de-mayo-en-el-cabildo-de-cordoba',
       outroTitle: 'EQUILIBRIO',
-      outro: 'La inflación cayó en este nivel. La batalla por el déficit cero continúa. Más allá espera la Casta.',
+      outro: 'La inflación cayó en esta ficción. “Cuando nosotros dijimos que íbamos a ir a déficit cero, dijeron que estábamos locos”, dijo Milei en Córdoba. Más allá espera la Casta.',
       outroSource: 'https://www.casarosada.gob.ar/informacion/discursos/50748-palabras-del-presidente-de-la-nacion-javier-milei-en-el-ieral-desde-la-provincia-de-cordoba',
+    },
+    {
+      introTitle: 'EL LABERINTO DE LA CASTA',
+      intro: 'Milei describió en el Congreso el “modelo de la casta”. En esta ficción, la dupla cruza pasillos de expedientes hasta enfrentar al Déficit Fiscal.',
+      introSource: 'https://www.casarosada.gob.ar/informacion/discursos/50662-cadena-nacional-del-presidente-de-la-nacion-javier-milei-presentando-el-presupuesto-2025-en-el-congreso-de-la-nacion',
+      outroTitle: 'DÉFICIT CERO',
+      outro: 'El Déficit Fiscal cayó, pero el mapa sigue abierto. “Vetaremos todos los proyectos que atenten contra el equilibrio fiscal”, dijo Milei en el Congreso. La próxima batalla espera.',
+      outroSource: 'https://www.casarosada.gob.ar/informacion/discursos/50662-cadena-nacional-del-presidente-de-la-nacion-javier-milei-presentando-el-presupuesto-2025-en-el-congreso-de-la-nacion',
     },
   ];
 
@@ -204,7 +226,7 @@
   };
 
   let state = 'menu';
-  let levelIndex = new URLSearchParams(window.location.search).get('level') === '2' ? 1 : 0;
+  let levelIndex = Math.min(2, Math.max(0, Number(new URLSearchParams(window.location.search).get('level') || 1) - 1 || 0));
   let pendingLevel = 0;
   let score = 0;
   let lives = 3;
@@ -221,8 +243,6 @@
   let boss = null;
   let cam = 0;
   let elapsed = 0;
-  let heroLabelUntil = 0;
-  let bossLabelUntil = 0;
   let bossIntroduced = false;
   let noticeTime = 0;
   let jumpQueued = false;
@@ -231,10 +251,10 @@
   let abilityQueued = false;
   let shieldTime = 0;
   let abilityCd = 0;
-  let conanCollected = false;
-  let conan = { x: 850, direction: 1, fleeing: false };
+  let dogs = [];
   let unlockedPatricia = false;
   let unlockedLevel2 = false;
+  let unlockedLevel3 = false;
   let muted = false;
   let crowdNearby = false;
   let bossMarchStart = null;
@@ -248,10 +268,13 @@
   let scoreSubmitted = false;
   const decisionsShown = new Set();
   let activeDecision = null;
+  let enemyAnnounceAfter = 0;
   let controlsPausedGame = false;
   try { unlockedPatricia = localStorage.getItem('smb-patricia-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
   try { unlockedLevel2 = localStorage.getItem('smb-level2-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
+  try { unlockedLevel3 = localStorage.getItem('smb-level3-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
   ui.level2Start.hidden = !unlockedLevel2;
+  ui.level3Start.hidden = !unlockedLevel3;
 
   const randomEnemyTypes = ['noqui', 'narco', 'ensobrado', 'econochanta', 'agorero', 'progre', 'zurdo', 'sindigarca'];
   const companionHero = () => selectedDuo.find(index => index !== heroIndex) ?? selectedDuo[1];
@@ -267,7 +290,8 @@
       heroes.forEach((hero, index) => {
         const button = document.createElement('button');
         button.type = 'button';
-        button.textContent = hero.name + (index === 2 && !unlockedPatricia ? ' 🔒' : '');
+        button.innerHTML = `<strong>${hero.name}${index === 2 && !unlockedPatricia ? ' 🔒' : ''}</strong><small>${hero.weapon}</small>`;
+        button.setAttribute('aria-label', `${hero.name}: ${hero.weapon}, habilidad ${hero.ability}`);
         button.disabled = (index === 2 && !unlockedPatricia) || selectedDuo[1 - slotIndex] === index;
         button.setAttribute('aria-pressed', String(selectedDuo[slotIndex] === index));
         button.addEventListener('click', () => {
@@ -287,6 +311,7 @@
     ...current().ground.map(([a, b]) => ({ x: a, y: 230, w: b - a, h: 40 })),
     ...current().ledges.map(([x, y, w]) => ({ x, y, w, h: 12 })),
   ];
+  const hasGroundUnder = x => current().ground.some(([start, end]) => x >= start && x <= end);
 
   function resizeCanvas() {
     const bounds = canvas.getBoundingClientRect();
@@ -538,6 +563,13 @@
 
   function loadLevel(index) {
     levelIndex = index;
+    if (index === 1) {
+      sprites.cordoba.src ||= './assets/cordoba-landmarks-small.png';
+      sprites.schiaretti.src ||= './assets/schiaretti-cutout-small.png';
+    } else if (index === 2) {
+      sprites.casta.src ||= './assets/casta-landmarks-small.png';
+      sprites.deficit.src ||= './assets/deficit-boss-small.png';
+    }
     document.querySelectorAll('.level-card').forEach((card, cardIndex) => {
       card.classList.toggle('active', cardIndex === index);
       card.classList.toggle('done', cardIndex < index);
@@ -556,7 +588,8 @@
     particles = [];
     effects = [];
     encountered = new Set();
-    boss = { x: 1615, y: 168, w: 35, h: 60, hp: index === 0 ? 14 : 18, maxHp: index === 0 ? 14 : 18, shotCd: index === 0 ? 2.25 : 1.5, invulnerable: 0, alive: true, jailed: false };
+    const bossHealth = [14, 18, 22][index];
+    boss = { x: index === 2 ? 1600 : 1615, y: 168, w: index === 2 ? 65 : 35, h: index === 2 ? 70 : 60, hp: bossHealth, maxHp: bossHealth, shotCd: index === 0 ? 2.25 : 1.5, invulnerable: 0, alive: true, jailed: false };
     for (const { audio: track } of musicTracks) {
       track.pause();
       track.volume = 0;
@@ -567,17 +600,18 @@
     roarDuckUntil = 0;
     lastLaughAt = -Infinity;
     crowdNearby = false;
-    conanCollected = false;
-    conan = { x: 850, direction: 1, fleeing: false };
+    dogs = (index === 0
+      ? [['MURRAY', 300, 1, 245, 350], ['CONAN', 850, 0, 700, 875], ['MILTON', 1220, 2, 1150, 1330]]
+      : index === 1 ? [['ROBERT', 350, 3, 275, 395], ['LUCAS', 1200, 4, 1120, 1340]] : [])
+      .map(([name, x, sprite, minX, maxX]) => ({ name, x, sprite, minX, maxX, direction: 1, fleeing: false, collected: false }));
     shieldTime = 0;
     abilityCd = 0;
     cam = 0;
     elapsed = 0;
-    heroLabelUntil = 2.5;
-    bossLabelUntil = 0;
     bossIntroduced = false;
     decisionsShown.clear();
     activeDecision = null;
+    enemyAnnounceAfter = 0;
     ui.decisionPanel.hidden = true;
     syncUi();
     message(`NIVEL 1-${index + 1}: ${data.name}`, 2.1);
@@ -588,7 +622,7 @@
     ui.rankingPanel.hidden = true;
     if (window.matchMedia('(max-width: 780px), (hover: none) and (pointer: coarse)').matches) document.getElementById('ideasPanel').hidden = true;
     ui.shareStatus.textContent = '';
-    if (!(index === 1 && levelIndex === 0 && state === 'won')) score = 0;
+    if (!(index === levelIndex + 1 && state === 'won')) score = 0;
     lives = 3;
     heroIndex = selectedDuo[0];
     loadLevel(index);
@@ -597,6 +631,7 @@
     ui.overlay.classList.remove('result');
     ui.overlay.classList.remove('story-intro');
     ui.duoSelector.hidden = true;
+    ui.scoreForm.hidden = true;
     ui.rankingButton.textContent = '🏆 RANKING';
     ui.pause.hidden = true;
     syncMusic();
@@ -609,6 +644,7 @@
     ui.overlay.classList.remove('result');
     ui.overlay.classList.add('story-intro');
     ui.duoSelector.hidden = false;
+    ui.scoreForm.hidden = true;
     renderDuoSelector();
     ui.rankingPanel.hidden = true;
     ui.storyBoss.hidden = true;
@@ -665,12 +701,21 @@
     setState(win ? 'won' : 'lost');
     syncMusic();
     if (win && levelIndex === 0) {
+      const firstUnlock = !unlockedPatricia;
       unlockedPatricia = true;
       unlockedLevel2 = true;
       try { localStorage.setItem('smb-patricia-unlocked', 'yes'); } catch { /* The unlock remains available this session. */ }
       try { localStorage.setItem('smb-level2-unlocked', 'yes'); } catch { /* The unlock remains available this session. */ }
       ui.level2Start.hidden = false;
       syncUi();
+      storyScenes[0].outro = firstUnlock
+        ? 'En esta ficción satírica, Cristina queda tras las rejas. “Por eso tienen a su líder presa”, dijo Milei en el Congreso. Patricia se desbloqueó.'
+        : 'En esta ficción satírica, Cristina queda tras las rejas. “Por eso tienen a su líder presa”, dijo Milei en el Congreso. Patricia ya forma parte de tu dupla.';
+    }
+    if (win && levelIndex === 1) {
+      unlockedLevel3 = true;
+      try { localStorage.setItem('smb-level3-unlocked', 'yes'); } catch { /* The unlock remains available this session. */ }
+      ui.level3Start.hidden = false;
     }
     ui.overlay.hidden = false;
     ui.overlay.classList.remove('story-intro');
@@ -682,12 +727,13 @@
     ui.storyBoss.hidden = !win || levelIndex !== 0;
     ui.storySource.hidden = !win;
     if (win) ui.storySource.href = storyScenes[levelIndex].outroSource;
-    ui.play.innerHTML = win && levelIndex === 0 ? 'NIVEL 1-2 <span>▶</span>' : win ? 'JUGAR DE NUEVO <span>▶</span>' : 'REINTENTAR <span>▶</span>';
+    ui.play.innerHTML = win && levelIndex < levelData.length - 1 ? `NIVEL 1-${levelIndex + 2} <span>▶</span>` : win ? 'JUGAR DE NUEVO <span>▶</span>' : 'REINTENTAR <span>▶</span>';
     scoreSubmitted = false;
     ui.scoreForm.hidden = false;
+    ui.scoreForm.querySelector('button').disabled = false;
     ui.rankingPanel.hidden = true;
     if (window.matchMedia('(max-width: 780px), (hover: none) and (pointer: coarse)').matches) document.getElementById('ideasPanel').hidden = true;
-    ui.rankingButton.textContent = '🏆 GUARDAR PUNTAJE';
+    ui.rankingButton.textContent = '🏆 VER RANKING';
     ui.rankingStatus.textContent = 'Guardá tu puntaje para aparecer en el ranking.';
     loadRanking();
     playSfx(win ? 'victory' : 'defeat');
@@ -723,7 +769,7 @@
   async function shareGame() {
     const url = new URL(window.location.href);
     url.search = '';
-    if (levelIndex === 1) url.searchParams.set('level', '2');
+    if (levelIndex > 0) url.searchParams.set('level', String(levelIndex + 1));
     url.hash = '';
     const text = state === 'won' || state === 'lost'
       ? `Hice ${score.toLocaleString('es-AR')} puntos en Super Milei Bros. ¿Me superás?`
@@ -772,6 +818,7 @@
 
   function showDecision(kind) {
     const decision = decisions[kind];
+    sprites.decisionEnemies.src ||= './assets/decision-enemies-small.png';
     decisionsShown.add(kind);
     activeDecision = kind;
     ui.decisionTitle.textContent = decision.title;
@@ -804,13 +851,13 @@
       const groundEnemy = ['reporter', 'econochanta', 'agorero'].includes(type);
       enemies.push({ type, x, y, w: type === 'reporter' ? 18 : groundEnemy ? 20 : 21, h: groundEnemy ? 22 : 16,
         startX: x, startY: y, direction: -1, hp: 2, alive: true, phase: Math.random() * 6 });
-      encountered.add(type);
     }
     ui.decisionPanel.hidden = true;
     activeDecision = null;
     setState('playing');
     canvas.focus();
-    message(selected.message, 3, 'enemy');
+    enemyAnnounceAfter = elapsed + 2.4;
+    message(selected.message, 3.6, 'enemy');
     playSfx('switch');
     syncMusic();
   }
@@ -921,17 +968,14 @@
       syncMusic();
       score += 2000;
       shots = shots.filter(shot => shot.friendly);
-      message(`¡${current().bossName} DERROTADA! LLEGÁ A LA META`, 2.5);
+      message(`¡${current().bossName} VENCIDO! LLEGÁ A LA META`, 2.5);
       syncUi();
     }
   }
 
   function update(dt) {
     elapsed += dt;
-    if (!bossIntroduced && player.x > 1370) {
-      bossIntroduced = true;
-      bossLabelUntil = elapsed + 3;
-    }
+    if (!bossIntroduced && player.x > 1370) bossIntroduced = true;
     if (noticeTime > 0) {
       noticeTime -= dt;
       if (noticeTime <= 0) ui.message.classList.remove('show');
@@ -996,8 +1040,8 @@
     companion.stride += Math.abs(companion.x - companionX) / 14;
     companion.y += (player.y - companion.y) * Math.min(1, dt * 9);
     cam = clamp(player.x - W * .32, 0, Math.max(0, WORLD - W));
-    const decisionKind = levelIndex === 0 ? 'cabinet' : 'libra';
-    if (!decisionsShown.has(decisionKind) && player.x >= 950 && player.grounded) {
+    const decisionKind = ['cabinet', 'libra'][levelIndex];
+    if (decisionKind && !decisionsShown.has(decisionKind) && player.x >= 950 && player.grounded) {
       showDecision(decisionKind);
       return;
     }
@@ -1013,23 +1057,24 @@
         syncUi();
       }
     }
-    if (!conanCollected) {
-      if (!conan.fleeing && Math.abs(conan.x - player.x) < 145) {
-        conan.fleeing = true;
-        message('¡ATRAPÁ A CONAN!', 1.6);
+    for (const dog of dogs) {
+      if (dog.collected) continue;
+      if (!dog.fleeing && Math.abs(dog.x - player.x) < 100) {
+        dog.fleeing = true;
+        message(`¡ATRAPÁ A ${dog.name}!`, 1.6, 'enemy');
       }
-      if (conan.fleeing) {
-        if (conan.x >= 875) conan.direction = -1;
-        if (conan.x <= 690) conan.direction = 1;
-        conan.x = clamp(conan.x + conan.direction * 83 * dt, 690, 875);
+      if (dog.fleeing) {
+        if (dog.x >= dog.maxX) dog.direction = -1;
+        if (dog.x <= dog.minX) dog.direction = 1;
+        dog.x = clamp(dog.x + dog.direction * 68 * dt, dog.minX, dog.maxX);
       }
-      if (overlap(player, { x: conan.x - 10, y: 205, w: 28, h: 25 })) {
-        conanCollected = true;
+      if (overlap(player, { x: dog.x - 12, y: 202, w: 30, h: 28 })) {
+        dog.collected = true;
         const gainedLife = lives < 3;
         lives = Math.min(3, lives + 1);
         score += 250;
-        spawnParticles(conan.x, 210, '#ffe493', 15);
-        message(gainedLife ? '¡ATRAPASTE A CONAN! +1 VIDA' : '¡ATRAPASTE A CONAN! +250', 1.4);
+        spawnParticles(dog.x, 210, '#ffe493', 15);
+        message(gainedLife ? `¡ATRAPASTE A ${dog.name}! +1 VIDA` : `¡ATRAPASTE A ${dog.name}! +250`, 1.4);
         playSfx(gainedLife ? 'life' : 'coin');
         syncUi();
       }
@@ -1037,7 +1082,7 @@
 
     for (const enemy of enemies) {
       if (!enemy.alive) continue;
-      if (!encountered.has(enemy.type) && enemy.x > player.x && enemy.x - player.x < 105) {
+      if (elapsed >= enemyAnnounceAfter && !encountered.has(enemy.type) && enemy.x > player.x && enemy.x - player.x < 105) {
         encountered.add(enemy.type);
         const introductions = { piquetero: 'APARECEN LOS PIQUETEROS', noqui: 'CUIDADO CON LOS ÑOQUIS', bill: 'SE DISPARA LA INFLACIÓN', reporter: 'LLEGA LA PRENSA', envelope: 'CAEN SOBRES', criticism: 'CRÍTICAS DE ALIADOS', narco: 'NARCOS EN EL CAMINO', ensobrado: 'PERIODISTAS ENSOBRADOS', econochanta: 'APARECEN LOS ECONOCHANTAS', agorero: 'AGOREROS DEL FRACASO', progre: 'PROGRES EN EL CAMINO', zurdo: 'ZURDOS SUCIOS', sindigarca: 'APARECEN LOS SINDIGARCAS' };
         message(introductions[enemy.type], 2.6, 'enemy');
@@ -1047,13 +1092,24 @@
       if (enemy.stun > 0) {
         enemy.y = enemy.startY;
       } else if (enemy.type === 'bill' || enemy.type === 'envelope' || enemy.type === 'criticism') {
-        enemy.x = enemy.startX + Math.sin(enemy.phase * 1.6) * 24;
-        enemy.y = enemy.startY + Math.sin(enemy.phase * 2.1) * 9;
+        const criticism = enemy.type === 'criticism';
+        enemy.x = enemy.startX + Math.sin(enemy.phase * (criticism ? 2.2 : 1.6)) * (criticism ? 34 : 24);
+        enemy.y = enemy.startY + Math.sin(enemy.phase * 2.1) * (criticism ? 15 : 9);
       } else {
         const speed = enemy.type === 'sindigarca' ? 22 : enemy.type === 'zurdo' ? 46 : enemy.type === 'noqui' || enemy.type === 'narco' ? 43 : 28;
         enemy.x += enemy.direction * speed * dt;
-        if (Math.abs(enemy.x - enemy.startX) > 42) enemy.direction *= -1;
+        if (Math.abs(enemy.x - enemy.startX) > 42 || !hasGroundUnder(enemy.x + (enemy.direction < 0 ? -4 : enemy.w + 4))) enemy.direction *= -1;
         if (enemy.type === 'noqui' || enemy.type === 'reporter') enemy.y = enemy.startY - Math.abs(Math.sin(enemy.phase * 2.2)) * (enemy.type === 'reporter' ? 2 : 19);
+      }
+      if (enemy.type === 'reporter' && enemy.stun <= 0 && Math.abs(enemy.x - player.x) < 115) {
+        enemy.attackCd = (enemy.attackCd || 0) - dt;
+        if (enemy.attackCd <= 0) {
+          enemy.attackCd = 2.8;
+          shots.push({ x: enemy.x - 4, y: enemy.y + 8, w: 7, h: 6, vx: -95, vy: 0,
+            friendly: false, color: '#d8f4ff', life: 1.5 });
+          effect('launch', enemy.x, enemy.y + 10, -1, .15);
+          playSfx('bossShot');
+        }
       }
       if (overlap(player, enemy)) {
         if (oldBottom <= enemy.y + 7 && player.vy > 0 && !['bill', 'envelope', 'criticism'].includes(enemy.type)) {
@@ -1187,11 +1243,22 @@
       ctx.lineTo(0, 230);
       ctx.fill();
     } else {
-      rect(0, 0, W, H, data.sky);
-      rect(0, 100, W, 130, '#323952');
-      rect(390 - cam * .05, 35, 27, 27, '#a4b9c6');
+      const sky = ctx.createLinearGradient(0, 0, 0, 230);
+      sky.addColorStop(0, '#7799a8');
+      sky.addColorStop(1, '#d7c6ad');
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, W, H);
+      rect(0, 165, W, 65, '#728785');
+      for (let i = -1; i < 11; i++) {
+        const column = Math.floor(cam * .17 / 76) + i;
+        const x = column * 76 - cam * .17;
+        rect(x, 127 + Math.abs(column * 13) % 27, 67, 100, '#7c8683');
+        rect(x + 5, 149, 7, 10, '#c6c8b7');
+        rect(x + 25, 149, 7, 10, '#c6c8b7');
+        rect(x + 45, 149, 7, 10, '#c6c8b7');
+      }
     }
-    for (let i = -1; i < 14; i++) {
+    if (levelIndex === 0) for (let i = -1; i < 14; i++) {
       const column = Math.floor(farScroll / 63) + i;
       const x = column * 63 - farScroll;
       const tall = (levelIndex === 1 ? 25 : 34) + ((column * 19 % (levelIndex === 1 ? 24 : 42)) + (levelIndex === 1 ? 24 : 42)) % (levelIndex === 1 ? 24 : 42);
@@ -1200,15 +1267,17 @@
       for (let wx = 8; wx < 48; wx += 15) for (let wy = 9; wy < tall; wy += 15) rect(x + wx, 153 - tall + wy, 4, 6, '#d0bc91');
     }
     if (levelIndex === 1) {
-      const x = 620 - cam * .18;
-      rect(x - 18, 90, 77, 113, '#d5c6a9');
-      rect(x - 22, 85, 85, 8, '#e8d8b8');
-      for (const tower of [x - 23, x + 44]) {
-        rect(tower, 64, 17, 29, '#d9c7a3');
-        rect(tower + 4, 50, 9, 16, '#c4ae8b');
-        rect(tower + 7, 44, 3, 7, '#eddabd');
+      for (let i = -1; i < 11; i++) {
+        const block = Math.floor(farScroll / 115) + i;
+        const x = block * 115 - farScroll;
+        const height = 42 + (Math.abs(block * 11) % 25);
+        rect(x, 190 - height, 105, height + 31, block % 2 ? '#b7a992' : '#a9a996');
+        rect(x - 2, 186 - height, 109, 5, '#e1d1b2');
+        for (let arch = 0; arch < 4; arch++) {
+          rect(x + 10 + arch * 24, 173, 12, 48, '#6e817d');
+          rect(x + 12 + arch * 24, 176, 8, 32, '#476477');
+        }
       }
-      rect(x + 12, 153, 17, 50, '#6b655c');
     }
     if (levelIndex === 0) {
       const roadY = 131;
@@ -1220,7 +1289,7 @@
         rect(x + 47, roadY + 3, 26, 1, '#e5d8b8');
       }
     }
-    for (let i = -1; i < 11; i++) {
+    if (levelIndex === 0) for (let i = -1; i < 11; i++) {
       const column = Math.floor(nearScroll / 83) + i;
       const x = column * 83 - nearScroll;
       const tall = 37 + ((column * 23 % 43) + 43) % 43;
@@ -1239,23 +1308,27 @@
       ctx.imageSmoothingQuality = 'high';
       for (const [worldX, sx, sw, width, height] of [[160, 0, 920, 220, 143], [660, 920, 580, 165, 186], [1110, 1500, 672, 220, 117]]) {
         const x = worldX - cam;
-        if (x + width > 0 && x < W) ctx.drawImage(sprites.cordoba, sx, 0, sw, 724, x, 230 - height, width, height);
+        if (x + width > 0 && x < W) ctx.drawImage(sprites.cordoba, sx / 2, 0, sw / 2, 362, x, 230 - height, width, height);
+      }
+      ctx.restore();
+    }
+    if (levelIndex === 2 && sprites.casta.complete && sprites.casta.naturalWidth) {
+      const cropWidth = sprites.casta.naturalWidth / 3;
+      ctx.save();
+      ctx.imageSmoothingEnabled = true;
+      for (const [worldX, index, width, height] of [[135, 0, 235, 142], [615, 1, 195, 138], [1085, 2, 225, 137]]) {
+        const x = worldX - cam;
+        if (x + width > 0 && x < W) ctx.drawImage(sprites.casta, index * cropWidth, 0, cropWidth, sprites.casta.naturalHeight, x, 230 - height, width, height);
       }
       ctx.restore();
     }
     if (levelIndex === 1 && sprites.schiaretti.complete && sprites.schiaretti.naturalWidth) {
-      const x = 350 - cam;
+      const x = 255 - cam;
       if (x > -55 && x < W + 10) {
         ctx.save();
         ctx.imageSmoothingEnabled = true;
-        ctx.drawImage(sprites.schiaretti, 140, 45, 680, 1450, x, 132, 38, 58);
+        ctx.drawImage(sprites.schiaretti, x, 172, 38, 58);
         ctx.restore();
-        rect(x - 10, 119, 58, 10, '#c9a56f');
-        ctx.fillStyle = '#25333d';
-        ctx.font = 'bold 6px Arial, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('SCHIARETTI', Math.round(x + 19), 126);
-        ctx.textAlign = 'left';
       }
     }
     if (levelIndex === 0 && sprites.buenosAires.complete && sprites.buenosAires.naturalWidth) {
@@ -1263,14 +1336,14 @@
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       for (const [worldX, sx, sw, width] of [[220, 0, 250, 70], [650, 275, 1165, 235], [1170, 1450, 722, 175]]) {
-        const x = worldX - cam * .9;
-        if (x + width > 0 && x < W) ctx.drawImage(sprites.buenosAires, sx, 0, sw, 724, x, 93, width, 150);
+        const x = worldX - cam;
+        if (x + width > 0 && x < W) ctx.drawImage(sprites.buenosAires, sx / 2, 0, sw / 2, 362, x, 93, width, 150);
       }
       ctx.restore();
     }
     if (levelIndex === 0) {
-      for (const worldX of [105, 385, 500, 940, 1040, 1410, 1740]) {
-        const x = worldX - cam * .9;
+      for (const worldX of [105, 470, 560, 995, 1100, 1455, 1740]) {
+        const x = worldX - cam;
         if (x < -32 || x > W + 32) continue;
         rect(x - 2, 194, 5, 37, '#6b5040');
         for (const [dx, dy, radius] of [[0, 182, 16], [-12, 188, 11], [12, 187, 12]]) {
@@ -1377,12 +1450,12 @@
           : Math.abs(motion.vx) > 8 ? 1 + Math.floor(motion.stride) % 2 : 0;
         const [sourceX, sourceWidth] = heroes[who].crops[frame];
         const width = frame === 3 ? 49 : 44;
-        ctx.drawImage(sheet, sourceX, 40, sourceWidth, 610, x + 7 - width / 2, y - 24, width, 46);
+        ctx.drawImage(sheet, sourceX / 2, 20, sourceWidth / 2, 305, x + 7 - width / 2, y - 24, width, 46);
       } else if (who === 2) {
         ctx.drawImage(sheet, 0, 0, sheet.naturalWidth, sheet.naturalHeight, x - 14, y - 21, 43, 43);
       } else {
         const crop = who === 0 ? [100, 0, 750, 887] : [970, 0, 770, 887];
-        ctx.drawImage(sheet, ...crop, x - 15, y - 24, 44, 46);
+        ctx.drawImage(sheet, ...crop.map(value => value / 2), x - 15, y - 24, 44, 46);
       }
       ctx.restore();
     } else {
@@ -1395,7 +1468,6 @@
       ctx.ellipse(x + 7, y + 1, 22, 27, 0, 0, Math.PI * 2);
       ctx.stroke();
     }
-    if (active && elapsed < heroLabelUntil) text(heroes[who].name, x + 7, y - 24, '#fff2ae', 6, 'center');
   }
 
   function drawEnemy(enemy) {
@@ -1410,7 +1482,7 @@
         ctx.save();
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(sprites.politicalEnemies, sx, 0, sw, 724, x + enemy.w / 2 - 23, y + enemy.h - 44, 46, 44);
+        ctx.drawImage(sprites.politicalEnemies, sx / 2, 0, sw / 2, 362, x + enemy.w / 2 - 23, y + enemy.h - 44, 46, 44);
         ctx.restore();
       } else {
         rect(x, y, enemy.w, enemy.h, enemy.type === 'progre' ? '#3da89e' : enemy.type === 'zurdo' ? '#ac4d48' : '#414453');
@@ -1426,7 +1498,7 @@
         ctx.save();
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(sprites.randomEnemies, sx, 0, sw, 757, x + enemy.w / 2 - 22, y + enemy.h - 43, 44, 43);
+        ctx.drawImage(sprites.randomEnemies, sx / 2, 0, sw / 2, 378, x + enemy.w / 2 - 22, y + enemy.h - 43, 44, 43);
         ctx.restore();
         if (enemy.stun > 0) text('⚡', x + 10, y - 6, '#ffe978', 10, 'center');
         return;
@@ -1443,6 +1515,17 @@
       if (enemy.type === 'econochanta') { rect(x - 4, y + 8, 9, 9, '#b8d7a5'); rect(x - 2, y + 13, 5, 2, '#5f9a76'); }
       if (enemy.type === 'agorero') { rect(x - 4, y + 3, 8, 6, '#667080'); text('!', x, y + 9, '#ffe093', 7, 'center'); }
       if (enemy.stun > 0) text('⚡', x + 10, y - 5, '#ffe978', 10, 'center');
+      return;
+    }
+    if (['reporter', 'envelope', 'criticism'].includes(enemy.type) && sprites.decisionEnemies.complete && sprites.decisionEnemies.naturalWidth) {
+      const index = ['reporter', 'envelope', 'criticism'].indexOf(enemy.type);
+      const cropWidth = sprites.decisionEnemies.naturalWidth / 3;
+      const size = enemy.type === 'reporter' ? [39, 42] : enemy.type === 'envelope' ? [48, 32] : [34, 29];
+      ctx.save();
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(sprites.decisionEnemies, index * cropWidth, 0, cropWidth, sprites.decisionEnemies.naturalHeight,
+        x + enemy.w / 2 - size[0] / 2, y + enemy.h - size[1], ...size);
+      ctx.restore();
       return;
     }
     if (enemy.type === 'reporter') {
@@ -1487,7 +1570,7 @@
       ctx.imageSmoothingQuality = 'high';
       ctx.translate(x + enemy.w / 2, y + enemy.h);
       ctx.scale(-1, 1);
-      ctx.drawImage(sprites.enemies, sx, sy, sw, sh, -width / 2, -height, width, height);
+      ctx.drawImage(sprites.enemies, sx / 2, sy / 2, sw / 2, sh / 2, -width / 2, -height, width, height);
       ctx.restore();
     } else {
       rect(x, y, enemy.w, enemy.h, enemy.type === 'bill' ? '#7ed276' : '#c75b58');
@@ -1579,9 +1662,11 @@
       ctx.translate(x + 17, y + 25);
       ctx.rotate(Math.sin(elapsed * 2) * .08);
       ctx.scale(-1, 1);
-      ctx.drawImage(sprites.enemies, 555, 65, 840, 575, -48, -34, 96, 68);
+      ctx.drawImage(sprites.enemies, 277.5, 32.5, 420, 287.5, -48, -34, 96, 68);
       ctx.restore();
       text('↑', x + 17, y - 11, '#ff8b64', 22, 'center');
+    } else if (levelIndex === 2 && sprites.deficit.complete && sprites.deficit.naturalWidth) {
+      ctx.drawImage(sprites.deficit, x - 10, y - 12, 85, 82);
     } else {
       rect(x - 5, y, 48, 58, levelIndex === 0 ? '#9b3156' : '#b97044');
     }
@@ -1597,7 +1682,6 @@
       }
       return;
     }
-    if (elapsed < bossLabelUntil) text(current().bossName, x + 19, y - 24, '#ffe38c', 7, 'center');
     rect(x - 4, y - 44, 45, 4, '#311d28');
     rect(x - 4, y - 44, 45 * boss.hp / boss.maxHp, 4, '#e56d60');
   }
@@ -1608,34 +1692,31 @@
     rect(x + 3, 159, 32, 20, '#f5f4e9');
     rect(x + 3, 166, 32, 7, '#83c5d6');
     rect(x + 16, 169, 6, 4, '#e8bd52');
-    text('META', x + 19, 157, '#fff0c4', 7, 'center');
-    if (levelIndex === 0 && !boss.alive && x > -50 && x < W + 50) {
+    if (levelIndex === 0 && !unlockedPatricia && !boss.alive && x > -50 && x < W + 50) {
       if (sprites.patricia.complete && sprites.patricia.naturalWidth) {
         ctx.drawImage(sprites.patricia, x - 54, 188, 41, 43);
       }
-      text('PATRICIA', x - 35, 183, '#f6eccb', 7, 'center');
     }
   }
 
-  function drawConan() {
-    if (conanCollected) return;
-    const x = conan.x - cam;
-    if (x < -30 || x > W + 30) return;
-    const step = conan.fleeing ? Math.sin(elapsed * 20) * 3 : 0;
-    ctx.save();
-    if (conan.direction < 0) {
-      ctx.translate(x * 2 + 4, 0);
-      ctx.scale(-1, 1);
+  function drawDogs() {
+    for (const dog of dogs) {
+      if (dog.collected) continue;
+      const x = dog.x - cam;
+      if (x < -50 || x > W + 50) continue;
+      const step = dog.fleeing ? Math.sin(elapsed * 18) * 1.5 : 0;
+      if (sprites.mastiffs.complete && sprites.mastiffs.naturalWidth) {
+        const cropWidth = sprites.mastiffs.naturalWidth / 5;
+        ctx.save();
+        ctx.imageSmoothingEnabled = true;
+        if (dog.direction < 0) {
+          ctx.translate(x * 2 + 4, 0);
+          ctx.scale(-1, 1);
+        }
+        ctx.drawImage(sprites.mastiffs, dog.sprite * cropWidth, 0, cropWidth, sprites.mastiffs.naturalHeight, x - 21, 199 + step, 47, 31);
+        ctx.restore();
+      } else rect(x - 14, 208 + step, 28, 21, '#9b7351');
     }
-    rect(x - 10, 217, 24, 11, '#7b5848');
-    rect(x + 7, 209, 11, 12, '#87644f');
-    rect(x + 9, 205, 5, 7, '#5b3c31');
-    rect(x + 16, 207, 4, 9, '#5b3c31');
-    rect(x + 14, 214, 2, 2, '#f1e6ce');
-    rect(x - 8, 226 + step, 4, 4, '#392d2b');
-    rect(x + 5, 226 - step, 4, 4, '#392d2b');
-    ctx.restore();
-    text('CONAN ♥', x + 2, 202, '#fff0ba', 7, 'center');
   }
 
   function draw() {
@@ -1644,7 +1725,7 @@
     ground();
     for (const coin of coins) drawCoin(coin);
     for (const enemy of enemies) drawEnemy(enemy);
-    drawConan();
+    drawDogs();
     drawBoss();
     drawFinish();
     for (const shot of shots) {
@@ -1664,9 +1745,6 @@
     if (player.invulnerable <= 0 || Math.floor(elapsed * 12) % 2 === 0) drawHero(player.x, player.y, heroIndex, true, player.facing, player);
     drawEffects();
     for (const p of particles) rect(p.x - cam, p.y, 2, 2, p.color);
-    if (boss && boss.alive && elapsed < bossLabelUntil) {
-      text(levelIndex === 0 ? 'JEFA INTERMEDIA' : 'INFLACIÓN', W / 2, 91, '#ffe09d', 9, 'center');
-    }
   }
 
   function frame(now) {
@@ -1834,6 +1912,7 @@
     else showIntro(state === 'won' && levelIndex < levelData.length - 1 ? levelIndex + 1 : levelIndex);
   });
   ui.level2Start.addEventListener('click', () => showIntro(1));
+  ui.level3Start.addEventListener('click', () => showIntro(2));
   ui.decisionPanel.querySelectorAll('[data-decision]').forEach(button => {
     button.addEventListener('click', () => chooseDecision(button.dataset.decision));
   });
@@ -1851,7 +1930,7 @@
     if (!ui.rankingPanel.hidden && window.matchMedia('(max-width: 780px), (hover: none) and (pointer: coarse)').matches) document.getElementById('ideasPanel').hidden = true;
     if (!ui.rankingPanel.hidden) {
       loadRanking();
-      (ui.scoreForm.hidden ? ui.rankingClose : ui.playerAlias).focus();
+      ui.rankingClose.focus();
     }
   });
   ui.rankingClose.addEventListener('click', () => { ui.rankingPanel.hidden = true; });

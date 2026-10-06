@@ -54,7 +54,7 @@
           <figure><span class="intro-karina"></span><figcaption>KARINA</figcaption></figure>
         </div>
         <div class="story-boss" id="storyBoss" aria-label="Cristina tras las rejas en una escena ficticia" hidden>
-          <img src="./assets/cristina.png" alt="">
+          <img src="./assets/cristina-small.png" alt="">
           <span class="story-bars" aria-hidden="true"></span>
         </div>
         <p class="eyebrow" id="overlayEyebrow">FAN GAME · HOMENAJE SATÍRICO</p>
@@ -66,21 +66,24 @@
           <div class="duo-slot" data-slot="1"><strong>TE ACOMPAÑA</strong><span class="duo-avatar" role="img"></span><div class="duo-options"></div></div>
         </div>
         <button class="primary-button" id="play" type="button">JUGAR <span>▶</span></button>
-        <button class="level2-start" id="level2Start" type="button" hidden>IR AL NIVEL 1-2 <span>▶</span></button>
+        <div class="level-shortcuts">
+          <button class="level2-start" id="level2Start" type="button" hidden>IR AL NIVEL 1-2 <span>▶</span></button>
+          <button class="level2-start" id="level3Start" type="button" hidden>IR AL NIVEL 1-3 <span>▶</span></button>
+        </div>
         <div class="social-actions">
           <button id="rankingButton" type="button">🏆 RANKING</button>
           <button id="ideasButton" type="button">💡 IDEAS</button>
           <button id="shareButton" type="button">↗ COMPARTIR</button>
         </div>
+        <form id="scoreForm" class="score-entry" autocomplete="off" hidden>
+          <label for="playerAlias">TU ALIAS</label>
+          <input id="playerAlias" name="alias" type="text" maxlength="18" autocomplete="off" spellcheck="false" required placeholder="Tu nombre en el ranking">
+          <button type="submit">GUARDAR PUNTAJE</button>
+        </form>
+        <p id="rankingStatus" class="ranking-status" role="status" aria-live="polite"></p>
         <p class="ranking-preview" id="rankingPreview" aria-live="polite">TOP 3 · CARGANDO…</p>
         <div class="ranking-panel" id="rankingPanel" hidden>
           <div class="ranking-head"><strong id="rankingTitle">RANKING GLOBAL</strong><button id="rankingClose" type="button" aria-label="Cerrar ranking">×</button></div>
-          <form id="scoreForm" autocomplete="off" hidden>
-            <label for="playerAlias">TU ALIAS</label>
-            <input id="playerAlias" name="alias" type="text" maxlength="18" autocomplete="off" spellcheck="false" required placeholder="Tu nombre en el ranking">
-            <button type="submit">GUARDAR PUNTAJE</button>
-          </form>
-          <p id="rankingStatus" role="status" aria-live="polite"></p>
           <ol id="rankingList"></ol>
         </div>
         <p class="share-status" id="shareStatus" role="status" aria-live="polite"></p>
@@ -108,7 +111,7 @@
 
     <section class="ideas-panel" id="ideasPanel" aria-labelledby="ideasTitle" tabindex="-1">
       <div class="ranking-head"><strong id="ideasTitle">IDEAS PARA EL JUEGO</strong><button id="ideasClose" type="button" aria-label="Cerrar ideas">×</button></div>
-      <p class="ideas-intro">Votá qué debería llegar después. Los votos orientan el desarrollo; las propuestas nuevas se revisan antes de publicarse.</p>
+      <p class="ideas-intro">Apoyá las ideas que querés ver en el juego. Cada voto cuesta ARS 1.000 y se cuenta sólo cuando Mercado Pago confirma el pago. Las propuestas nuevas se revisan antes de publicarse.</p>
       <p id="ideasStatus" role="status" aria-live="polite"></p>
       <div id="ideasList" class="ideas-list"></div>
       <form id="ideaForm" autocomplete="off" hidden>
@@ -142,7 +145,8 @@
         <div class="level-cards">
           <div class="level-card active"><span>01</span><strong>La avenida</strong><small>Cristina, jefa intermedia</small></div>
           <div class="level-card"><span>02</span><strong>La economía</strong><small>Córdoba · enfrentá a la inflación</small></div>
-          <div class="level-card"><span>03</span><strong>La casta</strong><small>Próximamente</small></div>
+          <div class="level-card"><span>03</span><strong>La casta</strong><small>Congreso · enfrentá al déficit fiscal</small></div>
+          <div class="level-card future"><span>04+</span><strong>El mapa sigue</strong><small>Nuevos escenarios en camino</small></div>
         </div>
         <div class="roster"><span>PERSONAJES</span><strong>JAVIER · KARINA</strong><small id="rosterUnlock">PATRICIA 🔒</small></div>
       </div>

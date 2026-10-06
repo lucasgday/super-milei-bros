@@ -48,7 +48,7 @@ module.exports = async function handler(req, res) {
 
     const { alias, score, level = 1 } = req.body || {};
     const name = typeof alias === 'string' ? alias.trim().replace(/\s+/g, ' ') : '';
-    if (!/^[\p{L}\p{N} _-]{2,18}$/u.test(name) || !Number.isInteger(score) || score < 0 || score > 10000 || (level !== 1 && level !== 2)) {
+    if (!/^[\p{L}\p{N} _-]{2,18}$/u.test(name) || !Number.isInteger(score) || score < 0 || score > 30000 || ![1, 2, 3].includes(level)) {
       return res.status(400).json({ error: 'Alias o puntaje inválido' });
     }
 

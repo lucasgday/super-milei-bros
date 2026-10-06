@@ -50,12 +50,16 @@ test('validates submissions and returns ranked entries', async () => {
       { alias: 'Lucas', score: 900, level: 1 },
     ]);
 
+    const third = response();
+    await handler({ method: 'POST', body: { alias: 'Duo', score: 14500, level: 3 }, headers: {}, socket: {} }, third);
+    assert.equal(third.statusCode, 201);
+
     entries.set('super-milei-bros:level-1:ranking-v1', [[JSON.stringify({ alias: 'Histórico', id: 'old' }), 750]]);
     const migrated = response();
     await handler({ method: 'GET' }, migrated);
-    assert.deepEqual(migrated.body.ranking[2], { alias: 'Histórico', score: 750, level: 1 });
+    assert.deepEqual(migrated.body.ranking[3], { alias: 'Histórico', score: 750, level: 1 });
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
       const allowed = response();
       await handler({ method: 'POST', body: { alias: 'Lucas', score: 900 }, headers: {}, socket: {} }, allowed);
       assert.equal(allowed.statusCode, 201);
