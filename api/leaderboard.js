@@ -2,6 +2,7 @@ const crypto = require('node:crypto');
 
 const rankingKey = 'super-milei-bros:global:ranking-v1';
 const legacyKeyFor = level => `super-milei-bros:level-${level}:ranking-v1`;
+const rateLimitScript = "local count = redis.call('INCR', KEYS[1]) if count == 1 then redis.call('EXPIRE', KEYS[1], ARGV[1]) end return count";
 const redisUrl = () => process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
 const redisToken = () => process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 
@@ -54,8 +55,7 @@ module.exports = async function handler(req, res) {
     const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0];
     const digest = crypto.createHmac('sha256', redisToken()).update(ip).digest('hex');
     const rateKey = `super-milei-bros:submissions:${digest}`;
-    const count = Number(await redis(['INCR', rateKey]));
-    if (count === 1) await redis(['EXPIRE', rateKey, 3600]);
+    const count = Number(await redis(['EVAL', rateLimitScript, 1, rateKey, 3600]));
     if (count > 5) return res.status(429).json({ error: 'Demasiados intentos. Probá más tarde.' });
 
     await redis(['ZADD', rankingKey, score, JSON.stringify({ alias: name, level, id: crypto.randomUUID() })]);

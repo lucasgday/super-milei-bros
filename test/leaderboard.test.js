@@ -21,8 +21,7 @@ test('validates submissions and returns ranked entries', async () => {
   global.fetch = async (_url, options) => {
     const [command, key, ...args] = JSON.parse(options.body);
     let result;
-    if (command === 'INCR') result = ++count;
-    if (command === 'EXPIRE') result = 1;
+    if (command === 'EVAL') result = ++count;
     if (command === 'ZADD') { entries.set(key, [...(entries.get(key) || []), [args[1], args[0]]]); result = 1; }
     if (command === 'ZREVRANGE') result = (entries.get(key) || []).flat();
     return { ok: true, json: async () => ({ result }) };
@@ -35,6 +34,7 @@ test('validates submissions and returns ranked entries', async () => {
     const saved = response();
     await handler({ method: 'POST', body: { alias: 'Lucas', score: 900 }, headers: {}, socket: {} }, saved);
     assert.equal(saved.statusCode, 201);
+    assert.equal(count, 1);
 
     const listed = response();
     await handler({ method: 'GET' }, listed);
@@ -54,6 +54,15 @@ test('validates submissions and returns ranked entries', async () => {
     const migrated = response();
     await handler({ method: 'GET' }, migrated);
     assert.deepEqual(migrated.body.ranking[2], { alias: 'Histórico', score: 750, level: 1 });
+
+    for (let i = 0; i < 3; i++) {
+      const allowed = response();
+      await handler({ method: 'POST', body: { alias: 'Lucas', score: 900 }, headers: {}, socket: {} }, allowed);
+      assert.equal(allowed.statusCode, 201);
+    }
+    const limited = response();
+    await handler({ method: 'POST', body: { alias: 'Lucas', score: 900 }, headers: {}, socket: {} }, limited);
+    assert.equal(limited.statusCode, 429);
   } finally {
     global.fetch = originalFetch;
   }
