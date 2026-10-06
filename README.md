@@ -57,6 +57,8 @@ El botón IDEAS lleva a las propuestas debajo del juego en escritorio; en móvil
 
 **Compatibilidad pendiente:** esta versión del servidor crea preferencias con `/checkout/preferences` y espera Webhooks del evento `payment`. El evento **Order (Mercado Pago)** de Checkout Pro con API de Orders usa `/v1/orders`, IDs de orden y otro formato de notificación: sus claves de firma no pueden conectarse sin adaptar y probar el flujo. No cargues las credenciales de producción ni actives `MP_VOTES_ENABLED` para una aplicación configurada sólo con `order`.
 
+Para ensayar sin cargos reales, configurá `MP_VOTES_MODE=test` y `MP_VOTES_ENABLED=true` junto con `MP_ACCESS_TOKEN_TEST` y `MP_WEBHOOK_SECRET_TEST` en el servidor. El modo de prueba sólo usa esas credenciales, abre el checkout de prueba y mantiene sus votos separados del ranking real. Para desactivarlo, quitá `MP_VOTES_ENABLED` o ponelo en `false` y redesplegá. Para producción se requiere `MP_VOTES_MODE=live`, credenciales sin `_TEST` y un hosting apto para actividad comercial. Mercado Pago indica que los pagos hechos con credenciales de prueba no envían notificaciones: el checkout se puede ensayar, pero el webhook se prueba por separado con su simulador y tests automatizados.
+
 El código es público; las credenciales son privadas y **nunca** deben agregarse al repositorio ni enviarse por chat. Para preparar la integración:
 
 1. En [Mercado Pago Developers](https://www.mercadopago.com.ar/developers/es/docs/getting-started), creá una aplicación de pagos online con **Checkout Pro** para ventas propias. Obtené las [credenciales de prueba y producción](https://www.mercadopago.com.ar/developers/es/docs/credentials) de esa aplicación.

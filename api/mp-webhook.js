@@ -1,5 +1,5 @@
 const ideas = require('../ideas.json');
-const { redis, enabled, paidVotesKey, voteAmount, ideaFromReference, validWebhookSignature } = require('../lib/vote-payments');
+const { redis, enabled, paidVotesKey, paymentKey, accessToken, voteAmount, ideaFromReference, validWebhookSignature } = require('../lib/vote-payments');
 
 const applyPaymentScript = `
 local idea = redis.call('HGET', KEYS[1], 'idea')
@@ -30,7 +30,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const response = await fetch(`https://api.mercadopago.com/v1/payments/${dataId}`, {
-      headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` },
+      headers: { Authorization: `Bearer ${accessToken()}` },
     });
     if (!response.ok) throw new Error('Payment unavailable');
     const payment = await response.json();
@@ -38,7 +38,7 @@ module.exports = async function handler(req, res) {
     if (String(payment.id) !== String(dataId) || !idea || payment.currency_id !== 'ARS'
       || Number(payment.transaction_amount) !== voteAmount) return res.status(200).end();
     const approved = payment.status === 'approved' && Number(payment.transaction_amount_refunded || 0) === 0;
-    await redis(['EVAL', applyPaymentScript, 2, `super-milei-bros:ideas:payment:${dataId}`, paidVotesKey, idea.id, approved ? '1' : '0']);
+    await redis(['EVAL', applyPaymentScript, 2, paymentKey(dataId), paidVotesKey(), idea.id, approved ? '1' : '0']);
     return res.status(200).end();
   } catch {
     return res.status(503).end();

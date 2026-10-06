@@ -13,6 +13,7 @@
   let ideas = [];
   let available = false;
   let paymentEnabled = false;
+  let paymentMode = 'off';
   let loading = false;
   const returnStatus = new URLSearchParams(window.location.search).get('vote');
 
@@ -46,9 +47,9 @@
       description.textContent = idea.description;
       vote.type = 'button';
       vote.className = 'idea-vote';
-      vote.textContent = paymentEnabled ? `▲ ARS 1.000 · ${idea.votes}` : `▲ ${idea.votes} · PRÓXIMAMENTE`;
+      vote.textContent = paymentMode === 'test' ? `▲ PRUEBA · ${idea.votes}` : paymentEnabled ? `▲ ARS 1.000 · ${idea.votes}` : `▲ ${idea.votes} · PRÓXIMAMENTE`;
       vote.setAttribute('aria-label', paymentEnabled
-        ? `Apoyar ${idea.title} con ARS 1.000. ${idea.votes} votos confirmados.`
+        ? paymentMode === 'test' ? `Probar checkout de ${idea.title} sin cargo real. ${idea.votes} votos de prueba.` : `Apoyar ${idea.title} con ARS 1.000. ${idea.votes} votos confirmados.`
         : `${idea.title}: ${idea.votes} votos confirmados. Próximamente.`);
       vote.disabled = !paymentEnabled;
       vote.addEventListener('click', () => submitVote(idea, vote));
@@ -79,7 +80,10 @@
       ideas = data.ideas;
       available = data.available;
       paymentEnabled = data.paymentEnabled;
-      intro.textContent = paymentEnabled
+      paymentMode = data.paymentMode || 'off';
+      intro.textContent = paymentMode === 'test'
+        ? 'MODO DE PRUEBA: el checkout usa credenciales de test. No se cobra dinero ni se suman votos reales. Las propuestas nuevas se revisan antes de publicarse.'
+        : paymentEnabled
         ? 'Apoyá las ideas que querés ver en el juego. Cada voto cuesta ARS 1.000 y se cuenta sólo cuando Mercado Pago confirma el pago. Las propuestas nuevas se revisan antes de publicarse.'
         : 'Elegí qué ideas te gustaría ver en el juego. Las propuestas nuevas se revisan antes de publicarse.';
       form.hidden = !available;
@@ -88,12 +92,13 @@
     } else {
       available = false;
       paymentEnabled = false;
+      paymentMode = 'off';
       form.hidden = true;
       status.textContent = ideas.length ? 'Votos y envíos no disponibles en este momento.' : 'No pudimos cargar las propuestas. Probá de nuevo más tarde.';
       render();
     }
     if (returnStatus === 'success' || returnStatus === 'pending') {
-      status.textContent = 'Si completaste el pago, el voto aparecerá cuando Mercado Pago lo confirme.';
+      status.textContent = paymentMode === 'test' ? 'Prueba finalizada. No hubo cargo ni se sumó un voto real.' : 'Si completaste el pago, el voto aparecerá cuando Mercado Pago lo confirme.';
       if (mobileLayout.matches) panel.hidden = false;
     } else if (returnStatus === 'failure') {
       status.textContent = 'El retorno indica que el pago no se completó. Sólo cuentan pagos confirmados.';

@@ -7,10 +7,11 @@ process.env.UPSTASH_REDIS_REST_TOKEN = 'redis-test-token';
 process.env.MP_ACCESS_TOKEN = 'mp-test-token';
 process.env.MP_WEBHOOK_SECRET = 'webhook-test-secret';
 process.env.MP_VOTES_ENABLED = 'true';
+process.env.MP_VOTES_MODE = 'live';
 
 const checkout = require('../api/paid-votes');
 const webhook = require('../api/mp-webhook');
-const { createReference, validWebhookSignature } = require('../lib/vote-payments');
+const { createReference, validWebhookSignature, paidVotesKey } = require('../lib/vote-payments');
 
 function response() {
   return {
@@ -106,4 +107,38 @@ test('webhook counts approved payments once, rejects forgery, and reverses refun
     assert.equal(votes, 0);
     assert.equal(validWebhookSignature('ts=1,v1=' + '0'.repeat(64), 'x', '12345'), false);
   } finally { global.fetch = originalFetch; }
+});
+
+test('test mode uses only test credentials, sandbox checkout, and isolated vote keys', async () => {
+  const originalFetch = global.fetch;
+  process.env.MP_ACCESS_TOKEN_TEST = 'sandbox-token';
+  process.env.MP_WEBHOOK_SECRET_TEST = 'sandbox-secret';
+  process.env.MP_VOTES_MODE = 'test';
+  const calls = [];
+  global.fetch = async (url, options) => {
+    calls.push({ url, options });
+    if (String(url).includes('redis.example')) return { ok: true, json: async () => ({ result: 1 }) };
+    return { ok: true, json: async () => ({
+      init_point: 'https://www.mercadopago.com.ar/real',
+      sandbox_init_point: 'https://sandbox.mercadopago.com.ar/test',
+    }) };
+  };
+  try {
+    const result = response();
+    await checkout({ method: 'POST', body: { id: 'atlantico-sur' }, headers: {}, socket: {} }, result);
+    assert.equal(result.statusCode, 200);
+    assert.equal(result.body.url, 'https://sandbox.mercadopago.com.ar/test');
+    assert.equal(calls[1].options.headers.Authorization, 'Bearer sandbox-token');
+    assert.match(calls[0].options.body, /checkout-rate:test:/);
+    assert.equal(paidVotesKey(), 'super-milei-bros:ideas:paid-votes-test-v1');
+    const reference = JSON.parse(calls[1].options.body).external_reference;
+    assert.ok(require('../lib/vote-payments').ideaFromReference(reference, require('../ideas.json')));
+    process.env.MP_VOTES_MODE = 'live';
+    assert.equal(require('../lib/vote-payments').ideaFromReference(reference, require('../ideas.json')), null);
+  } finally {
+    global.fetch = originalFetch;
+    process.env.MP_VOTES_MODE = 'live';
+    delete process.env.MP_ACCESS_TOKEN_TEST;
+    delete process.env.MP_WEBHOOK_SECRET_TEST;
+  }
 });
