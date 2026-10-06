@@ -30,6 +30,7 @@
     heroes: new Image(),
     javierAnimated: new Image(),
     karinaAnimated: new Image(),
+    patriciaAnimated: new Image(),
     patricia: new Image(),
     cristina: new Image(),
     enemies: new Image(),
@@ -38,6 +39,7 @@
   sprites.heroes.src = './assets/heroes.png';
   sprites.javierAnimated.src = './assets/javier-animated.png';
   sprites.karinaAnimated.src = './assets/karina-animated.png';
+  sprites.patriciaAnimated.src = './assets/patricia-animated.png';
   sprites.patricia.src = './assets/patricia.png';
   sprites.cristina.src = './assets/cristina.png';
   sprites.enemies.src = './assets/enemies.png';
@@ -69,10 +71,12 @@
   const held = new Set();
   const touchHeld = new Set();
   const activeTouches = new Map();
+  const buttonHeld = new Set();
+  const controlPointers = new Map();
   const heroes = [
-    { name: 'JAVIER', speed: 133, jump: 285, ability: 'RUGIDO DEL LEÓN' },
-    { name: 'KARINA', speed: 146, jump: 315, ability: 'ESCUDO ESTRATÉGICO' },
-    { name: 'PATRICIA', speed: 150, jump: 290, ability: 'EMBESTIDA' },
+    { name: 'JAVIER', speed: 133, jump: 285, ability: 'RUGIDO DEL LEÓN', sprite: sprites.javierAnimated },
+    { name: 'KARINA', speed: 146, jump: 315, ability: 'ESCUDO ESTRATÉGICO', sprite: sprites.karinaAnimated },
+    { name: 'PATRICIA', speed: 150, jump: 290, ability: 'EMBESTIDA', sprite: sprites.patriciaAnimated },
   ];
 
   const levelData = [{
@@ -146,6 +150,9 @@
     ui.mobilePause.textContent = next === 'paused' ? '▶' : 'Ⅱ';
     if (next !== 'playing') {
       touchHeld.clear();
+      buttonHeld.clear();
+      controlPointers.clear();
+      document.querySelectorAll('.mobile-controls button').forEach(button => button.classList.remove('is-held'));
       jumpQueued = false;
       switchQueued = false;
       attackQueued = false;
@@ -497,7 +504,7 @@
       if (noticeTime <= 0) ui.message.classList.remove('show');
     }
 
-    const keys = key => held.has(key) || touchHeld.has(key);
+    const keys = key => held.has(key) || touchHeld.has(key) || buttonHeld.has(key);
     const left = keys('ArrowLeft') || keys('KeyA') || keys('left');
     const right = keys('ArrowRight') || keys('KeyD') || keys('right');
     const jump = jumpQueued || keys('Space') || keys('ArrowUp') || keys('KeyW') || keys('jump');
@@ -810,7 +817,7 @@
   function drawHero(x, y, who, active, facing = 1, motion = null) {
     x = Math.round(x - cam);
     y = Math.round(y);
-    const animated = who === 0 ? sprites.javierAnimated : who === 1 ? sprites.karinaAnimated : null;
+    const animated = heroes[who].sprite;
     const sheet = animated && animated.complete && animated.naturalWidth ? animated : who === 2 ? sprites.patricia : sprites.heroes;
     const ready = sheet.complete && sheet.naturalWidth > 0;
     if (ready) {
@@ -1111,6 +1118,40 @@
   canvas.addEventListener('lostpointercapture', releaseTouch);
   canvas.addEventListener('contextmenu', event => {
     if (state === 'playing') event.preventDefault();
+  });
+  const controls = document.querySelectorAll('.mobile-controls button');
+  const pressControl = control => {
+    if (control === 'jump') jumpQueued = true;
+    else if (control === 'attack') attackQueued = true;
+    else if (control === 'ability') abilityQueued = true;
+    else if (control === 'switch') switchQueued = true;
+  };
+  controls.forEach(button => {
+    const control = button.dataset.control;
+    button.addEventListener('pointerdown', event => {
+      if (state !== 'playing' || event.button !== 0) return;
+      event.preventDefault();
+      button.setPointerCapture(event.pointerId);
+      controlPointers.set(event.pointerId, control);
+      button.classList.add('is-held');
+      if (control === 'left' || control === 'right') buttonHeld.add(control);
+      else pressControl(control);
+    });
+    const release = event => {
+      if (controlPointers.get(event.pointerId) !== control) return;
+      controlPointers.delete(event.pointerId);
+      if (![...controlPointers.values()].includes(control)) {
+        buttonHeld.delete(control);
+        button.classList.remove('is-held');
+      }
+    };
+    button.addEventListener('pointerup', release);
+    button.addEventListener('pointercancel', release);
+    button.addEventListener('lostpointercapture', release);
+    button.addEventListener('click', event => {
+      if (event.detail === 0 && state === 'playing') pressControl(control);
+    });
+    button.addEventListener('contextmenu', event => event.preventDefault());
   });
   ui.play.addEventListener('click', requestPlay);
   ui.playPortrait.addEventListener('click', () => {

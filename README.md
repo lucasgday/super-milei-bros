@@ -15,11 +15,11 @@ Abrí `index.html` en un navegador moderno. También podés servir la carpeta co
 | Cambiar Javier / Karina | Q |
 | Pausar | P |
 
-En móvil se juega directamente sobre el escenario, preferentemente en horizontal. Mantené un dedo en el primer cuarto de la pantalla para ir a la izquierda o en el segundo cuarto para ir a la derecha; podés deslizarlo entre ambos. Con otro dedo, en la mitad derecha: tocá para saltar, deslizá a los lados para atacar, hacia arriba para la habilidad especial o hacia abajo para cambiar de personaje. El botón de pausa queda arriba a la derecha.
+En móvil, usá las flechas de la izquierda para moverte y los botones de la derecha para atacar, saltar, usar el poder y cambiar de personaje. Los controles quedan debajo del escenario tanto en vertical como en horizontal y admiten dos dedos a la vez. También siguen disponibles los gestos sobre el escenario: mantener pulsada la mitad izquierda para moverse; tocar la mitad derecha para saltar, deslizar a los lados para atacar, hacia arriba para la habilidad o hacia abajo para cambiar. La pausa queda arriba a la derecha.
 
 ## Desarrollo
 
-No hay dependencias ni compilación. El juego está hecho con Canvas 2D, JavaScript y CSS. Los fondos y objetos se dibujan en `game.js`; los sprites están en `assets/`. La música se reproduce al empezar la partida y se puede silenciar desde el botón superior. Los efectos de sonido se sintetizan en el navegador con Web Audio.
+No hay dependencias ni compilación. El juego está hecho con Canvas 2D, JavaScript y CSS. Los fondos y objetos se dibujan en `game.js`; los sprites están en `assets/`. Cada personaje jugable tiene una tira animada de cuatro cuadros (quieto, dos de carrera y ataque), declarada en `heroes` mediante `sprite`; ese formato también se usará para los próximos personajes. La música se reproduce al empezar la partida y se puede silenciar desde el botón superior. Los efectos de sonido se sintetizan en el navegador con Web Audio.
 
 La banda sonora tiene cuatro pistas de rock/punk con licencia CC0, no versiones ni arreglos de canciones existentes. La música cambia con un fundido al acercarse a una multitud, avanzar a la segunda mitad del nivel o entrar en el combate con Cristina:
 

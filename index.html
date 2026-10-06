@@ -26,7 +26,7 @@
         <div><span class="hud-label">NIVEL</span><strong id="levelName">1-1</strong></div>
         <div><span class="hud-label">PUNTOS</span><strong id="score">000000</strong></div>
       </div>
-      <canvas id="game" width="960" height="540" aria-label="Plataformas lateral con Javier y Karina. En móvil: mitad izquierda para moverse; mitad derecha para saltar, deslizar a los lados para atacar, hacia arriba para la habilidad y hacia abajo para cambiar de personaje."></canvas>
+      <canvas id="game" width="960" height="540" aria-label="Plataformas lateral con Javier, Karina y Patricia. En móvil, usá los controles debajo del escenario para moverte, saltar, atacar, usar la habilidad y cambiar de personaje."></canvas>
       <div class="message" id="message" aria-live="polite"></div>
       <div class="overlay" id="overlay">
         <div class="overlay-art" aria-hidden="true">
@@ -47,6 +47,21 @@
       </div>
       <div class="pause-screen" id="pauseScreen" hidden><strong>PAUSA</strong><button class="primary-button" id="resume" type="button">CONTINUAR <span>▶</span></button></div>
     </section>
+
+    <nav class="mobile-controls" aria-label="Controles del juego">
+      <div class="movement-controls">
+        <button type="button" data-control="left" aria-label="Mover a la izquierda"><span aria-hidden="true">◀</span></button>
+        <button type="button" data-control="right" aria-label="Mover a la derecha"><span aria-hidden="true">▶</span></button>
+      </div>
+      <div class="action-controls">
+        <div class="secondary-controls">
+          <button type="button" data-control="switch" aria-label="Cambiar personaje"><span aria-hidden="true">⇄</span><small>CAMBIAR</small></button>
+          <button type="button" data-control="ability" aria-label="Habilidad especial"><span aria-hidden="true">★</span><small>PODER</small></button>
+        </div>
+        <button type="button" class="attack-control" data-control="attack" aria-label="Atacar"><span aria-hidden="true">✦</span><small>ATACAR</small></button>
+        <button type="button" class="jump-control" data-control="jump" aria-label="Saltar"><span aria-hidden="true">↑</span><small>SALTAR</small></button>
+      </div>
+    </nav>
 
     <section class="below">
       <div class="level-list">

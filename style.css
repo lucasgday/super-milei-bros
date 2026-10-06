@@ -91,3 +91,29 @@
   body[data-game-state="playing"] .hud{pointer-events:none}
   .stage-shell canvas{touch-action:none;-webkit-user-select:none;-webkit-touch-callout:none}
 }
+.mobile-controls{display:none}
+@media (max-width:780px), (hover:none) and (pointer:coarse){
+  body[data-game-state="playing"] .mobile-controls{display:flex}
+  .mobile-controls{--control-size:clamp(50px,14vw,62px);flex:none;align-items:center;justify-content:space-between;gap:8px;min-height:calc(var(--control-size) + 26px + env(safe-area-inset-bottom));padding:8px max(10px,env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));background:#101c26;border-top:1px solid #45616c;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+  .movement-controls,.action-controls{display:flex;align-items:center;gap:5px}
+  .secondary-controls{display:flex;flex-direction:column;gap:4px}
+  .mobile-controls button{display:flex;flex:none;align-items:center;justify-content:center;flex-direction:column;width:var(--control-size);height:var(--control-size);padding:0;border:2px solid #8daab1;border-radius:50%;background:#2f5060;color:#fff;box-shadow:0 3px 0 #07131c;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;line-height:1}
+  .mobile-controls button span{font-size:25px;line-height:1}
+  .mobile-controls button small{font:700 9px/1 'Space Grotesk',Arial,sans-serif;margin-top:3px}
+  .mobile-controls .secondary-controls button{width:48px;height:calc((var(--control-size) - 4px)/2);border-radius:5px;background:#30444e;border-color:#6f929d}
+  .mobile-controls .secondary-controls span{font-size:16px}
+  .mobile-controls .secondary-controls small{font-size:8px;margin-top:0}
+  .mobile-controls .attack-control{background:#277b72;border-color:#8fddd0}
+  .mobile-controls .jump-control{background:#d46342;border-color:#ffbb86}
+  .mobile-controls button.is-held{transform:translateY(2px);box-shadow:0 1px 0 #07131c;filter:brightness(1.25)}
+}
+@media (max-width:780px) and (orientation:landscape), (hover:none) and (pointer:coarse) and (orientation:landscape){
+  .stage-shell{height:auto;flex:1;min-height:0}
+  .mobile-controls{position:relative;z-index:5}
+}
+@media (max-width:350px){
+  .mobile-controls{gap:4px;padding-left:7px;padding-right:7px}
+  .movement-controls,.action-controls{gap:3px}
+  .mobile-controls .secondary-controls button{width:40px}
+  .mobile-controls .secondary-controls small{font-size:7px}
+}
