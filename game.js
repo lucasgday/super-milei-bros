@@ -126,6 +126,7 @@
   let portraitAllowed = false;
   let audio = null;
   let noiseBuffer = null;
+  let lastLaughAt = -Infinity;
   let lastFrame = performance.now();
   try { unlockedPatricia = localStorage.getItem('smb-patricia-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
 
@@ -216,6 +217,34 @@
         source.start(start);
         source.stop(start + duration);
       };
+      const chainsaw = () => {
+        const duration = .32;
+        const engine = audio.createOscillator();
+        const throttle = audio.createOscillator();
+        const throttleDepth = audio.createGain();
+        const filter = audio.createBiquadFilter();
+        const gain = audio.createGain();
+        engine.type = 'sawtooth';
+        engine.frequency.setValueAtTime(82, now);
+        engine.frequency.exponentialRampToValueAtTime(165, now + .09);
+        engine.frequency.exponentialRampToValueAtTime(112, now + duration);
+        throttle.type = 'square';
+        throttle.frequency.value = 29;
+        throttleDepth.gain.value = .024;
+        filter.type = 'lowpass';
+        filter.frequency.value = 930;
+        gain.gain.setValueAtTime(.001, now);
+        gain.gain.exponentialRampToValueAtTime(.12, now + .035);
+        gain.gain.setValueAtTime(.12, now + .23);
+        gain.gain.exponentialRampToValueAtTime(.001, now + duration);
+        throttle.connect(throttleDepth).connect(gain.gain);
+        engine.connect(filter).connect(gain).connect(audio.destination);
+        engine.start(now);
+        throttle.start(now);
+        engine.stop(now + duration);
+        throttle.stop(now + duration);
+        noise(.3, .19, 1650);
+      };
       switch (kind) {
         case 'coin':
           tone(880, 1100, .085, .12, 'sine');
@@ -225,12 +254,11 @@
           [523, 659, 784, 1047].forEach((note, i) => tone(note, note * 1.03, .16, .12, 'triangle', i * .105));
           break;
         case 'attackJavier':
-          noise(.13, .17, 1250);
-          tone(180, 75, .17, .11, 'sawtooth');
+          chainsaw();
           break;
         case 'attackKarina':
-          tone(550, 1150, .19, .1, 'triangle');
-          noise(.12, .12, 2500, .025);
+          tone(430, 1250, .2, .16, 'triangle');
+          noise(.13, .13, 2900, .025);
           break;
         case 'attackPatricia':
         case 'dash':
@@ -256,7 +284,16 @@
           break;
         case 'jump': tone(220, 420, .13, .075, 'sine'); break;
         case 'switch': tone(510, 760, .12, .08, 'triangle'); break;
-        case 'bossShot': tone(280, 115, .16, .045, 'sawtooth'); break;
+        case 'bossShot':
+          tone(370, 105, .23, .13, 'sawtooth');
+          noise(.12, .1, 1050);
+          break;
+        case 'laugh':
+          [210, 170, 195].forEach((note, i) => {
+            tone(note, note * .78, .105, .075, 'sawtooth', i * .13);
+            noise(.055, .035, 780, i * .13);
+          });
+          break;
         case 'victory':
           [523, 659, 784, 1047].forEach((note, i) => tone(note, note, .23, .11, 'triangle', i * .13));
           break;
@@ -339,6 +376,7 @@
     bossMarch.pause();
     bossMarch.currentTime = 0;
     bossMarchStart = null;
+    lastLaughAt = -Infinity;
     crowdNearby = false;
     conanCollected = false;
     shieldTime = 0;
@@ -512,8 +550,15 @@
     if (enemy.hp <= 0) {
       enemy.alive = false;
       score += enemy.type === 'bill' ? 180 : 120;
+      maybeLaugh();
       syncUi();
     }
+  }
+
+  function maybeLaugh() {
+    if (heroIndex !== 0 || elapsed - lastLaughAt < 10 || Math.random() >= .25) return;
+    lastLaughAt = elapsed;
+    playSfx('laugh');
   }
 
   function damageBoss(amount) {
@@ -525,6 +570,7 @@
     effect('hit', boss.x + 15, boss.y + 23, 1, .3);
     if (boss.hp <= 0) {
       boss.alive = false;
+      maybeLaugh();
       syncMusic();
       score += 2000;
       shots = shots.filter(shot => shot.friendly);
@@ -997,9 +1043,9 @@
     }
     ctx.globalAlpha = 1;
     ctx.imageSmoothingEnabled = false;
-    text('CRISTINA', x + 19, y - 5, '#ffe38c', 7, 'center');
-    rect(x - 4, y - 16, 45, 4, '#311d28');
-    rect(x - 4, y - 16, 45 * boss.hp / boss.maxHp, 4, '#e56d60');
+    text('CRISTINA', x + 19, y - 24, '#ffe38c', 7, 'center');
+    rect(x - 4, y - 44, 45, 4, '#311d28');
+    rect(x - 4, y - 44, 45 * boss.hp / boss.maxHp, 4, '#e56d60');
   }
 
   function drawFinish() {
@@ -1154,6 +1200,9 @@
   canvas.addEventListener('pointercancel', releaseTouch);
   canvas.addEventListener('lostpointercapture', releaseTouch);
   canvas.addEventListener('contextmenu', event => {
+    if (state === 'playing') event.preventDefault();
+  });
+  canvas.addEventListener('dblclick', event => {
     if (state === 'playing') event.preventDefault();
   });
   const controls = document.querySelectorAll('.mobile-controls button');
