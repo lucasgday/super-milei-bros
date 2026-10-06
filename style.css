@@ -110,8 +110,8 @@
   .mobile-controls .secondary-controls button{width:48px;height:calc((var(--control-size) - 4px)/2);border-radius:5px;background:#30444e;border-color:#6f929d}
   .mobile-controls .secondary-controls span{font-size:16px}
   .mobile-controls .secondary-controls small{font-size:8px;margin-top:0}
-  .mobile-controls .attack-control{background:#277b72;border-color:#8fddd0}
-  .mobile-controls .jump-control{background:#d46342;border-color:#ffbb86}
+  .mobile-controls .attack-control{background:#b73339;border-color:#ffd0bc}
+  .mobile-controls .jump-control{background:#16806e;border-color:#b8f2d6}
   .mobile-controls button.is-held{transform:translateY(2px);box-shadow:0 1px 0 #07131c;filter:brightness(1.25)}
 }
 @media (max-width:780px) and (orientation:landscape), (hover:none) and (pointer:coarse) and (orientation:landscape){
@@ -139,10 +139,15 @@
   .mobile-controls .movement-controls button{width:clamp(58px,16vw,70px);height:clamp(58px,16vw,70px)}
   .mobile-controls .movement-controls button span{font-size:28px}
   .mobile-controls button{pointer-events:auto;background:#19374666;border-color:#e2f0ed88;box-shadow:0 2px 8px #07131c55;color:#fff}
-  .mobile-controls .attack-control{background:#176d6477;border-color:#c6f4e8aa}
-  .mobile-controls .jump-control{background:#ba583c77;border-color:#ffe0b5aa}
-  .mobile-controls .secondary-controls button{height:44px;background:#19374666;border-color:#e2f0ed88}
+  .mobile-controls .attack-control{background:#ad2939d9;border-color:#ffe0d2}
+  .mobile-controls .jump-control{background:#137c6bd9;border-color:#bcf7df}
+  .mobile-controls .secondary-controls button{height:44px;background:#286180df;border-color:#b4e8f5}
+  .mobile-controls .secondary-controls button[data-control="ability"]{background:#92701cdd;border-color:#ffe39a}
   .mobile-controls button.is-held{background:#426a7bcc;filter:brightness(1.2)}
+  .mobile-controls .attack-control.is-held{background:#d9424dea}
+  .mobile-controls .jump-control.is-held{background:#20a58deb}
+  .mobile-controls .secondary-controls button[data-control="switch"].is-held{background:#397fa4ef}
+  .mobile-controls .secondary-controls button[data-control="ability"].is-held{background:#b99227ef}
 }
 body[data-game-state="playing"],body[data-game-state="playing"] .stage-shell,body[data-game-state="playing"] .mobile-controls{touch-action:none}
 .social-actions{display:flex;justify-content:center;gap:10px;margin-top:10px}
