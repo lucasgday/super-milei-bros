@@ -34,6 +34,7 @@
     rankingList: document.getElementById('rankingList'),
     rankingTitle: document.getElementById('rankingTitle'),
     rankingStatus: document.getElementById('rankingStatus'),
+    rankingPreview: document.getElementById('rankingPreview'),
     scoreForm: document.getElementById('scoreForm'),
     playerAlias: document.getElementById('playerAlias'),
     shareButton: document.getElementById('shareButton'),
@@ -145,6 +146,9 @@
   let boss = null;
   let cam = 0;
   let elapsed = 0;
+  let heroLabelUntil = 0;
+  let bossLabelUntil = 0;
+  let bossIntroduced = false;
   let noticeTime = 0;
   let jumpQueued = false;
   let switchQueued = false;
@@ -432,6 +436,9 @@
     abilityCd = 0;
     cam = 0;
     elapsed = 0;
+    heroLabelUntil = 2.5;
+    bossLabelUntil = 0;
+    bossIntroduced = false;
     syncUi();
     message(`NIVEL 1-${index + 1}: ${data.name}`, 2.1);
   }
@@ -529,6 +536,9 @@
       const response = await fetch(`/api/leaderboard?level=${level}`);
       if (!response.ok) throw new Error();
       const { ranking } = await response.json();
+      ui.rankingPreview.textContent = ranking.length
+        ? `TOP 3 · ${ranking.slice(0, 3).map(({ alias, score: points }, index) => `${index + 1}. ${alias} ${Number(points).toLocaleString('es-AR')}`).join('  ·  ')}`
+        : 'TOP 3 · TODAVÍA SIN PUNTAJES';
       ui.rankingList.replaceChildren();
       ranking.forEach(({ alias, score: points }, index) => {
         const row = document.createElement('li');
@@ -542,6 +552,7 @@
       ui.rankingStatus.textContent = ranking.length ? '' : 'Todavía no hay puntajes. ¡Estrená el ranking!';
     } catch {
       ui.rankingStatus.textContent = 'El ranking compartido no está disponible ahora.';
+      ui.rankingPreview.textContent = 'RANKING NO DISPONIBLE';
     }
   }
 
@@ -655,6 +666,7 @@
 
   function switchHero() {
     heroIndex = (heroIndex + 1) % (unlockedPatricia ? heroes.length : 2);
+    heroLabelUntil = elapsed + 1.5;
     player.attackPose = 0;
     syncUi();
     message(`AHORA JUGÁS CON ${heroes[heroIndex].name}`, 1);
@@ -703,6 +715,10 @@
 
   function update(dt) {
     elapsed += dt;
+    if (!bossIntroduced && player.x > 1370) {
+      bossIntroduced = true;
+      bossLabelUntil = elapsed + 3;
+    }
     if (noticeTime > 0) {
       noticeTime -= dt;
       if (noticeTime <= 0) ui.message.classList.remove('show');
@@ -897,6 +913,8 @@
 
   function background() {
     const data = current();
+    const farScroll = cam * (levelIndex === 0 ? .55 : .18);
+    const nearScroll = cam * (levelIndex === 0 ? .8 : .36);
     if (levelIndex === 0) {
       const sky = ctx.createLinearGradient(0, 0, 0, 195);
       sky.addColorStop(0, '#78b6c8');
@@ -950,8 +968,9 @@
       rect(390 - cam * .05, 35, 27, 27, '#a4b9c6');
     }
     for (let i = -1; i < 14; i++) {
-      const x = i * 63 - (cam * .18 % 63);
-      const tall = (levelIndex === 1 ? 25 : 34) + (i * 19 % (levelIndex === 1 ? 24 : 42));
+      const column = Math.floor(farScroll / 63) + i;
+      const x = column * 63 - farScroll;
+      const tall = (levelIndex === 1 ? 25 : 34) + ((column * 19 % (levelIndex === 1 ? 24 : 42)) + (levelIndex === 1 ? 24 : 42)) % (levelIndex === 1 ? 24 : 42);
       rect(x, 153 - tall, 52, tall + 78, data.far);
       rect(x - 2, 151 - tall, 56, 3, '#688fa0');
       for (let wx = 8; wx < 48; wx += 15) for (let wy = 9; wy < tall; wy += 15) rect(x + wx, 153 - tall + wy, 4, 6, '#d0bc91');
@@ -967,9 +986,20 @@
       }
       rect(x + 12, 153, 17, 50, '#6b655c');
     }
+    if (levelIndex === 0) {
+      const roadY = 131;
+      rect(0, roadY, W, 7, '#667882');
+      rect(0, roadY, W, 2, '#c6c1aa');
+      for (let column = Math.floor(cam * .65 / 115) - 1; column < Math.ceil((cam * .65 + W) / 115) + 1; column++) {
+        const x = column * 115 - cam * .65;
+        rect(x, roadY + 7, 5, 45, '#60747c');
+        rect(x + 47, roadY + 3, 26, 1, '#e5d8b8');
+      }
+    }
     for (let i = -1; i < 11; i++) {
-      const x = i * 83 - (cam * .36 % 83);
-      const tall = 37 + (i * 23 % 43);
+      const column = Math.floor(nearScroll / 83) + i;
+      const x = column * 83 - nearScroll;
+      const tall = 37 + ((column * 23 % 43) + 43) % 43;
       rect(x, 196 - tall, 70, tall + 38, data.near);
       rect(x - 1, 193 - tall, 72, 3, '#263f53');
       rect(x + 3, 196 - tall, 3, tall + 38, '#506981');
@@ -983,11 +1013,39 @@
       ctx.save();
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
-      for (const [worldX, sx, sw, width] of [[220, 0, 250, 70], [650, 250, 1120, 235], [1170, 1370, 802, 175]]) {
+      for (const [worldX, sx, sw, width] of [[220, 0, 250, 70], [650, 275, 1165, 235], [1170, 1450, 722, 175]]) {
         const x = worldX - cam * .9;
         if (x + width > 0 && x < W) ctx.drawImage(sprites.buenosAires, sx, 0, sw, 724, x, 93, width, 150);
       }
       ctx.restore();
+    }
+    if (levelIndex === 0) {
+      for (const worldX of [105, 385, 765, 1035, 1320, 1460, 1750]) {
+        const x = worldX - cam * .95;
+        if (x < -32 || x > W + 32) continue;
+        rect(x - 2, 194, 5, 37, '#6b5040');
+        for (const [dx, dy, radius] of [[0, 182, 16], [-12, 188, 11], [12, 187, 12]]) {
+          ctx.fillStyle = '#385c48';
+          ctx.beginPath();
+          ctx.arc(x + dx, dy, radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        rect(x - 4, 177, 4, 3, '#6e9363');
+        rect(x + 8, 189, 4, 3, '#6e9363');
+      }
+      const arenaX = 1510 - cam;
+      if (arenaX < W && arenaX + 230 > 0) {
+        rect(arenaX, 113, 230, 117, '#4d5160');
+        rect(arenaX - 5, 107, 240, 8, '#9c8580');
+        for (let column = 0; column < 5; column++) {
+          rect(arenaX + 17 + column * 48, 130, 20, 42, '#242d3a');
+          rect(arenaX + 20 + column * 48, 133, 14, 34, '#8d6670');
+        }
+        rect(arenaX + 79, 179, 72, 51, '#292938');
+        rect(arenaX + 85, 185, 60, 45, '#704654');
+        rect(arenaX + 60, 99, 110, 8, '#b2938a');
+        rect(arenaX + 105, 78, 20, 21, '#7b6973');
+      }
     }
     if (levelIndex === 1) {
       const exchangeX = 1510 - cam;
@@ -1088,7 +1146,7 @@
       ctx.ellipse(x + 7, y + 1, 22, 27, 0, 0, Math.PI * 2);
       ctx.stroke();
     }
-    if (active) text(heroes[who].name, x + 7, y - 24, '#fff2ae', 6, 'center');
+    if (active && elapsed < heroLabelUntil) text(heroes[who].name, x + 7, y - 24, '#fff2ae', 6, 'center');
   }
 
   function drawEnemy(enemy) {
@@ -1204,7 +1262,7 @@
     }
     ctx.globalAlpha = 1;
     ctx.imageSmoothingEnabled = false;
-    text(current().bossName, x + 19, y - 24, '#ffe38c', 7, 'center');
+    if (elapsed < bossLabelUntil) text(current().bossName, x + 19, y - 24, '#ffe38c', 7, 'center');
     rect(x - 4, y - 44, 45, 4, '#311d28');
     rect(x - 4, y - 44, 45 * boss.hp / boss.maxHp, 4, '#e56d60');
   }
@@ -1271,7 +1329,7 @@
     if (player.invulnerable <= 0 || Math.floor(elapsed * 12) % 2 === 0) drawHero(player.x, player.y, heroIndex, true, player.facing, player);
     drawEffects();
     for (const p of particles) rect(p.x - cam, p.y, 2, 2, p.color);
-    if (boss && boss.alive && player.x > 1370) {
+    if (boss && boss.alive && elapsed < bossLabelUntil) {
       text(levelIndex === 0 ? 'JEFA INTERMEDIA' : 'INFLACIÓN', W / 2, 91, '#ffe09d', 9, 'center');
     }
   }
@@ -1485,5 +1543,6 @@
   resizeCanvas();
   new ResizeObserver(resizeCanvas).observe(document.querySelector('.stage-shell'));
   ui.message.classList.remove('show');
+  loadRanking();
   requestAnimationFrame(frame);
 })();
