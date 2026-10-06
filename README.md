@@ -4,6 +4,8 @@ Un fan game satírico de plataformas, jugable en el navegador y de código abier
 
 ## Jugar
 
+[Jugar online](https://super-milei-bros.vercel.app/)
+
 Abrí `index.html` en un navegador moderno. También podés servir la carpeta con `npx serve .` o `python3 -m http.server 8000`.
 
 | Acción | Teclado |
