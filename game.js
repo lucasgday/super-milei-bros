@@ -48,6 +48,7 @@
     cristina: new Image(),
     enemies: new Image(),
     crowd: new Image(),
+    buenosAires: new Image(),
   };
   sprites.heroes.src = './assets/heroes.png';
   sprites.javierAnimated.src = './assets/javier-animated.png';
@@ -57,6 +58,7 @@
   sprites.cristina.src = './assets/cristina.png';
   sprites.enemies.src = './assets/enemies.png';
   sprites.crowd.src = './assets/piquetero-crowd.png';
+  sprites.buenosAires.src = './assets/buenos-aires-landmarks.png';
   const openingTrack = new Audio('./assets/avenida-rock.mp3');
   openingTrack.loop = true;
   openingTrack.volume = 0;
@@ -151,6 +153,7 @@
   let shieldTime = 0;
   let abilityCd = 0;
   let conanCollected = false;
+  let conan = { x: 850, direction: 1, fleeing: false };
   let unlockedPatricia = false;
   let unlockedLevel2 = false;
   let muted = false;
@@ -424,6 +427,7 @@
     lastLaughAt = -Infinity;
     crowdNearby = false;
     conanCollected = false;
+    conan = { x: 850, direction: 1, fleeing: false };
     shieldTime = 0;
     abilityCd = 0;
     cam = 0;
@@ -775,15 +779,26 @@
         syncUi();
       }
     }
-    if (!conanCollected && Math.abs(player.x - 850) < 16 && Math.abs(player.y + player.h - 230) < 20) {
-      conanCollected = true;
-      const gainedLife = lives < 3;
-      lives = Math.min(3, lives + 1);
-      score += 250;
-      spawnParticles(850, 210, '#ffe493', 15);
-      message(gainedLife ? '¡CONAN TE DA UNA VIDA!' : '¡CONAN TE DA 250 PUNTOS!', 1.4);
-      playSfx(gainedLife ? 'life' : 'coin');
-      syncUi();
+    if (!conanCollected) {
+      if (!conan.fleeing && Math.abs(conan.x - player.x) < 145) {
+        conan.fleeing = true;
+        message('¡ATRAPÁ A CONAN!', 1.6);
+      }
+      if (conan.fleeing) {
+        if (conan.x >= 875) conan.direction = -1;
+        if (conan.x <= 690) conan.direction = 1;
+        conan.x = clamp(conan.x + conan.direction * 83 * dt, 690, 875);
+      }
+      if (overlap(player, { x: conan.x - 10, y: 205, w: 28, h: 25 })) {
+        conanCollected = true;
+        const gainedLife = lives < 3;
+        lives = Math.min(3, lives + 1);
+        score += 250;
+        spawnParticles(conan.x, 210, '#ffe493', 15);
+        message(gainedLife ? '¡ATRAPASTE A CONAN! +1 VIDA' : '¡ATRAPASTE A CONAN! +250', 1.4);
+        playSfx(gainedLife ? 'life' : 'coin');
+        syncUi();
+      }
     }
 
     for (const enemy of enemies) {
@@ -816,8 +831,12 @@
       boss.shotCd -= dt;
       if (boss.shotCd <= 0 && Math.abs(player.x - boss.x) < 420) {
         boss.shotCd = boss.hp < 7 ? .95 : 1.5;
-        for (let i = -1; i <= 1; i++) {
-          shots.push({ x: boss.x - 6, y: boss.y + 25, w: 8, h: 7, vx: -118, vy: i * 51, friendly: false, color: '#f18d5d', life: 3 });
+        const launchX = boss.x - 6;
+        const launchY = boss.y + 25;
+        const flightTime = Math.max(.28, (launchX - player.x - player.w / 2) / 165);
+        for (const spread of [-14, 0, 14]) {
+          const targetY = player.y + player.h * .6 + spread;
+          shots.push({ x: launchX, y: launchY, w: 8, h: 7, vx: -165, vy: (targetY - launchY) / flightTime, friendly: false, color: '#f18d5d', life: 3 });
         }
         playSfx('bossShot');
       }
@@ -937,21 +956,7 @@
       rect(x - 2, 151 - tall, 56, 3, '#688fa0');
       for (let wx = 8; wx < 48; wx += 15) for (let wy = 9; wy < tall; wy += 15) rect(x + wx, 153 - tall + wy, 4, 6, '#d0bc91');
     }
-    if (levelIndex === 0) {
-      const x = 155 - cam * .18;
-      rect(x - 7, 150, 25, 5, '#d9d0bb');
-      rect(x - 4, 145, 19, 5, '#eee2c9');
-      rect(x, 72, 11, 73, '#e7ddc9');
-      rect(x + 2, 66, 7, 6, '#f4e7ce');
-      ctx.fillStyle = '#f4e7ce';
-      ctx.beginPath();
-      ctx.moveTo(x + 2, 66);
-      ctx.lineTo(x + 5.5, 59);
-      ctx.lineTo(x + 9, 66);
-      ctx.fill();
-      rect(x + 3, 82, 2, 3, '#8da6a4');
-      rect(x + 7, 82, 2, 3, '#8da6a4');
-    } else if (levelIndex === 1) {
+    if (levelIndex === 1) {
       const x = 620 - cam * .18;
       rect(x - 18, 90, 77, 113, '#d5c6a9');
       rect(x - 22, 85, 85, 8, '#e8d8b8');
@@ -973,6 +978,16 @@
       rect(x + 42, 196 - tall + 8, 13, 17, '#7d98a0');
       rect(x + 42, 196 - tall + 8, 13, 2, '#bfd0be');
       rect(x + 29, 196 - 29, 12, 29, '#152238');
+    }
+    if (levelIndex === 0 && sprites.buenosAires.complete && sprites.buenosAires.naturalWidth) {
+      ctx.save();
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      for (const [worldX, sx, sw, width] of [[220, 0, 250, 70], [650, 250, 1120, 235], [1170, 1370, 802, 175]]) {
+        const x = worldX - cam * .9;
+        if (x + width > 0 && x < W) ctx.drawImage(sprites.buenosAires, sx, 0, sw, 724, x, 93, width, 150);
+      }
+      ctx.restore();
     }
     if (levelIndex === 1) {
       const exchangeX = 1510 - cam;
@@ -1211,15 +1226,22 @@
 
   function drawConan() {
     if (conanCollected) return;
-    const x = 850 - cam;
+    const x = conan.x - cam;
     if (x < -30 || x > W + 30) return;
+    const step = conan.fleeing ? Math.sin(elapsed * 20) * 3 : 0;
+    ctx.save();
+    if (conan.direction < 0) {
+      ctx.translate(x * 2 + 4, 0);
+      ctx.scale(-1, 1);
+    }
     rect(x - 10, 217, 24, 11, '#7b5848');
     rect(x + 7, 209, 11, 12, '#87644f');
     rect(x + 9, 205, 5, 7, '#5b3c31');
     rect(x + 16, 207, 4, 9, '#5b3c31');
     rect(x + 14, 214, 2, 2, '#f1e6ce');
-    rect(x - 8, 226, 4, 4, '#392d2b');
-    rect(x + 5, 226, 4, 4, '#392d2b');
+    rect(x - 8, 226 + step, 4, 4, '#392d2b');
+    rect(x + 5, 226 - step, 4, 4, '#392d2b');
+    ctx.restore();
     text('CONAN ♥', x + 2, 202, '#fff0ba', 7, 'center');
   }
 
@@ -1352,6 +1374,16 @@
   canvas.addEventListener('dblclick', event => {
     if (state === 'playing') event.preventDefault();
   });
+  let lastTap = { time: -Infinity, x: 0, y: 0 };
+  document.addEventListener('touchend', event => {
+    if (state !== 'playing' || event.changedTouches.length !== 1) return;
+    const touch = event.changedTouches[0];
+    const now = performance.now();
+    if (now - lastTap.time < 350 && Math.hypot(touch.clientX - lastTap.x, touch.clientY - lastTap.y) < 35) {
+      event.preventDefault();
+    }
+    lastTap = { time: now, x: touch.clientX, y: touch.clientY };
+  }, { capture: true, passive: false });
   const controls = document.querySelectorAll('.mobile-controls button');
   const pressControl = control => {
     if (control === 'jump') jumpQueued = true;

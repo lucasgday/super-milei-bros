@@ -144,6 +144,7 @@
   .mobile-controls .secondary-controls button{height:44px;background:#19374666;border-color:#e2f0ed88}
   .mobile-controls button.is-held{background:#426a7bcc;filter:brightness(1.2)}
 }
+body[data-game-state="playing"],body[data-game-state="playing"] .stage-shell,body[data-game-state="playing"] .mobile-controls{touch-action:none}
 .social-actions{display:flex;justify-content:center;gap:10px;margin-top:10px}
 .level2-start{min-height:34px;margin-top:7px;padding:6px 12px;border:1px solid #f0cf91;border-radius:3px;background:#284a53;color:#ffe5ad;font:700 12px 'Space Grotesk',Arial,sans-serif}
 .level2-start[hidden],body:not([data-game-state="menu"]) .level2-start{display:none}
