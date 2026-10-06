@@ -42,6 +42,7 @@
     shareButton: document.getElementById('shareButton'),
     shareStatus: document.getElementById('shareStatus'),
     decisionPanel: document.getElementById('decisionPanel'),
+    duoSelector: document.getElementById('duoSelector'),
   };
   const sprites = {
     heroes: new Image(),
@@ -53,6 +54,8 @@
     enemies: new Image(),
     crowd: new Image(),
     buenosAires: new Image(),
+    cordoba: new Image(),
+    randomEnemies: new Image(),
   };
   sprites.heroes.src = './assets/heroes.png';
   sprites.javierAnimated.src = './assets/javier-animated.png';
@@ -63,6 +66,8 @@
   sprites.enemies.src = './assets/enemies.png';
   sprites.crowd.src = './assets/piquetero-crowd.png';
   sprites.buenosAires.src = './assets/buenos-aires-landmarks.png';
+  sprites.cordoba.src = './assets/cordoba-landmarks.png';
+  sprites.randomEnemies.src = './assets/random-enemies.png';
   const openingTrack = new Audio('./assets/avenida-rock.mp3');
   openingTrack.loop = true;
   openingTrack.volume = 0;
@@ -116,8 +121,8 @@
     ground: [[0, 380], [420, 900], [940, 1360], [1400, WORLD]],
     ledges: [[145, 192, 86], [290, 166, 74], [510, 189, 86], [680, 168, 80], [810, 184, 65], [1030, 178, 90], [1210, 158, 82], [1480, 183, 78]],
     enemies: [
-      ['piquetero', 245, 208], ['noqui', 535, 212], ['piquetero', 720, 208],
-      ['bill', 1080, 126], ['noqui', 1225, 212], ['piquetero', 1470, 208],
+      ['piquetero', 245, 208], ['noqui', 535, 208, true], ['piquetero', 720, 208],
+      ['bill', 1080, 126], ['noqui', 1225, 208, true], ['piquetero', 1470, 208],
     ],
     coins: [[130, 164], [164, 164], [308, 139], [342, 139], [520, 164], [690, 141], [1020, 148], [1052, 148], [1225, 128], [1495, 155]],
   }, {
@@ -126,8 +131,8 @@
     ground: [[0, 410], [455, 880], [930, 1380], [1430, WORLD]],
     ledges: [[165, 187, 78], [300, 164, 82], [525, 178, 90], [690, 151, 75], [805, 188, 62], [1045, 177, 80], [1205, 156, 85], [1480, 178, 86]],
     enemies: [
-      ['bill', 225, 133], ['noqui', 365, 208], ['bill', 545, 133], ['bill', 735, 116],
-      ['noqui', 955, 208], ['bill', 1100, 130], ['noqui', 1280, 208], ['bill', 1475, 130],
+      ['bill', 225, 133], ['noqui', 365, 208, true], ['bill', 545, 133], ['bill', 735, 116],
+      ['noqui', 955, 208, true], ['bill', 1100, 130], ['noqui', 1280, 208, true], ['bill', 1475, 130],
     ],
     coins: [[135, 164], [190, 158], [328, 138], [510, 151], [675, 126], [810, 161], [1020, 150], [1190, 127], [1340, 163], [1515, 150]],
   }];
@@ -157,6 +162,7 @@
   let score = 0;
   let lives = 3;
   let heroIndex = 0;
+  let selectedDuo = [0, 1];
   let player;
   let companion;
   let enemies = [];
@@ -197,6 +203,30 @@
   try { unlockedPatricia = localStorage.getItem('smb-patricia-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
   try { unlockedLevel2 = localStorage.getItem('smb-level2-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
   ui.level2Start.hidden = !unlockedLevel2;
+
+  const randomEnemyTypes = ['noqui', 'narco', 'ensobrado', 'econochanta', 'agorero'];
+  const companionHero = () => selectedDuo.find(index => index !== heroIndex) ?? selectedDuo[1];
+
+  function renderDuoSelector() {
+    for (const slot of ui.duoSelector.querySelectorAll('.duo-slot')) {
+      const slotIndex = Number(slot.dataset.slot);
+      const options = slot.querySelector('.duo-options');
+      options.replaceChildren();
+      heroes.forEach((hero, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = hero.name + (index === 2 && !unlockedPatricia ? ' 🔒' : '');
+        button.disabled = (index === 2 && !unlockedPatricia) || selectedDuo[1 - slotIndex] === index;
+        button.setAttribute('aria-pressed', String(selectedDuo[slotIndex] === index));
+        button.addEventListener('click', () => {
+          selectedDuo[slotIndex] = index;
+          renderDuoSelector();
+          ui.duoSelector.querySelector(`.duo-slot[data-slot="${slotIndex}"] button[aria-pressed="true"]`).focus();
+        });
+        options.append(button);
+      });
+    }
+  }
 
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
   const overlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
@@ -334,6 +364,9 @@
           noise(.13, .13, 2900, .025);
           break;
         case 'attackPatricia':
+          tone(1100, 260, .13, .13, 'sawtooth');
+          noise(.14, .2, 4200);
+          break;
         case 'dash':
           noise(.2, .16, 850);
           tone(330, 105, .2, .08, 'sawtooth');
@@ -434,10 +467,12 @@
     const data = current();
     player = { x: 35, y: 170, w: 14, h: 22, vx: 0, vy: 0, grounded: false, facing: 1, invulnerable: 0, attackCd: 0, attackPose: 0, stride: 0 };
     companion = { x: 12, y: 170, vx: 0, stride: 0 };
-    enemies = data.enemies.map(([type, x, y]) => ({
-      type, x, y, w: type === 'piquetero' ? 48 : type === 'bill' ? 19 : 17, h: type === 'bill' ? 17 : 22,
-      startX: x, startY: y, direction: -1, hp: type === 'piquetero' ? 3 : 2, alive: true, phase: Math.random() * 6,
-    }));
+    enemies = data.enemies.map(([baseType, baseX, y, randomize]) => {
+      const type = randomize ? randomEnemyTypes[Math.floor(Math.random() * randomEnemyTypes.length)] : baseType;
+      const x = randomize ? baseX + Math.round((Math.random() - .5) * 32) : baseX;
+      return { type, x, y, w: type === 'piquetero' ? 48 : type === 'bill' ? 19 : 20, h: type === 'bill' ? 17 : 22,
+        startX: x, startY: y, direction: -1, hp: type === 'piquetero' ? 3 : 2, alive: true, phase: Math.random() * 6, stun: 0 };
+    });
     coins = data.coins.map(([x, y]) => ({ x, y, got: false }));
     shots = [];
     particles = [];
@@ -476,12 +511,13 @@
     ui.shareStatus.textContent = '';
     if (!(index === 1 && levelIndex === 0 && state === 'won')) score = 0;
     lives = 3;
-    heroIndex = 0;
+    heroIndex = selectedDuo[0];
     loadLevel(index);
     setState('playing');
     ui.overlay.hidden = true;
     ui.overlay.classList.remove('result');
     ui.overlay.classList.remove('story-intro');
+    ui.duoSelector.hidden = true;
     ui.rankingButton.textContent = '🏆 RANKING';
     ui.pause.hidden = true;
     syncMusic();
@@ -493,6 +529,8 @@
     const scene = storyScenes[index];
     ui.overlay.classList.remove('result');
     ui.overlay.classList.add('story-intro');
+    ui.duoSelector.hidden = false;
+    renderDuoSelector();
     ui.rankingPanel.hidden = true;
     ui.storyBoss.hidden = true;
     ui.eyebrow.textContent = `CAPÍTULO 1-${index + 1} · ${levelData[index].name}`;
@@ -558,6 +596,7 @@
     ui.overlay.hidden = false;
     ui.overlay.classList.remove('story-intro');
     ui.overlay.classList.add('result');
+    ui.duoSelector.hidden = true;
     ui.eyebrow.textContent = win ? `NIVEL 1-${levelIndex + 1} COMPLETADO · FICCIÓN SATÍRICA` : 'FIN DE PARTIDA';
     ui.title.textContent = win ? storyScenes[levelIndex].outroTitle : 'VOLVÉ A INTENTARLO';
     ui.body.textContent = win ? `${storyScenes[levelIndex].outro} Puntaje: ${score}.` : `Sumaste ${score} puntos. Podés volver a intentar el nivel desde el comienzo.`;
@@ -690,11 +729,14 @@
 
   function attack() {
     if (player.attackCd > 0 || state !== 'playing') return;
-    player.attackCd = heroIndex === 1 ? .32 : .44;
+    player.attackCd = heroIndex === 1 ? .32 : heroIndex === 2 ? .55 : .44;
     player.attackPose = .28;
-    if (heroIndex === 1) {
-      shots.push({ x: player.x + (player.facing > 0 ? 14 : -5), y: player.y + 7, w: 11, h: 10, vx: player.facing * 270, vy: 0, friendly: true, color: '#a4e7f2', life: 1.5 });
-      effect('launch', player.x + 7, player.y + 12, player.facing, .18);
+    if (heroIndex === 1 || heroIndex === 2) {
+      const taser = heroIndex === 2;
+      shots.push({ x: player.x + (player.facing > 0 ? 14 : -9), y: player.y + 7,
+        w: taser ? 18 : 11, h: taser ? 8 : 10, vx: player.facing * (taser ? 240 : 270), vy: 0,
+        friendly: true, taser, color: taser ? '#ffe978' : '#a4e7f2', life: taser ? .55 : 1.5 });
+      effect(taser ? 'taser' : 'launch', player.x + 7, player.y + 12, player.facing, .18);
     } else {
       effect('slash', player.x + 7, player.y + 10, player.facing, .25);
       const hit = { x: player.facing > 0 ? player.x + 8 : player.x - 29, y: player.y - 5, w: 35, h: 30 };
@@ -737,7 +779,7 @@
   }
 
   function switchHero() {
-    heroIndex = (heroIndex + 1) % (unlockedPatricia ? heroes.length : 2);
+    heroIndex = companionHero();
     heroLabelUntil = elapsed + 1.5;
     player.attackPose = 0;
     syncUi();
@@ -898,15 +940,18 @@
       if (!enemy.alive) continue;
       if (!encountered.has(enemy.type) && enemy.x > player.x && enemy.x - player.x < 105) {
         encountered.add(enemy.type);
-        const introductions = { piquetero: 'APARECEN LOS PIQUETEROS', noqui: 'CUIDADO CON LOS ÑOQUIS', bill: 'SE DISPARA LA INFLACIÓN', reporter: 'LLEGA LA PRENSA', envelope: 'CAEN SOBRES', criticism: 'CRÍTICAS DE ALIADOS' };
+        const introductions = { piquetero: 'APARECEN LOS PIQUETEROS', noqui: 'CUIDADO CON LOS ÑOQUIS', bill: 'SE DISPARA LA INFLACIÓN', reporter: 'LLEGA LA PRENSA', envelope: 'CAEN SOBRES', criticism: 'CRÍTICAS DE ALIADOS', narco: 'NARCOS EN EL CAMINO', ensobrado: 'PERIODISTAS ENSOBRADOS', econochanta: 'APARECEN LOS ECONOCHANTAS', agorero: 'AGOREROS DEL FRACASO' };
         message(introductions[enemy.type], 2.6, 'enemy');
       }
       enemy.phase += dt;
-      if (enemy.type === 'bill' || enemy.type === 'envelope' || enemy.type === 'criticism') {
+      enemy.stun = Math.max(0, (enemy.stun || 0) - dt);
+      if (enemy.stun > 0) {
+        enemy.y = enemy.startY;
+      } else if (enemy.type === 'bill' || enemy.type === 'envelope' || enemy.type === 'criticism') {
         enemy.x = enemy.startX + Math.sin(enemy.phase * 1.6) * 24;
         enemy.y = enemy.startY + Math.sin(enemy.phase * 2.1) * 9;
       } else {
-        enemy.x += enemy.direction * (enemy.type === 'noqui' ? 43 : 28) * dt;
+        enemy.x += enemy.direction * (enemy.type === 'noqui' || enemy.type === 'narco' ? 43 : 28) * dt;
         if (Math.abs(enemy.x - enemy.startX) > 42) enemy.direction *= -1;
         if (enemy.type === 'noqui' || enemy.type === 'reporter') enemy.y = enemy.startY - Math.abs(Math.sin(enemy.phase * 2.2)) * (enemy.type === 'reporter' ? 2 : 19);
       }
@@ -915,7 +960,7 @@
           damageEnemy(enemy, 3);
           player.vy = -190;
           playSfx('stomp');
-        } else hurt();
+        } else if (enemy.stun <= 0) hurt();
       }
     }
 
@@ -946,6 +991,7 @@
         for (const enemy of enemies) {
           if (shot.life <= 0 || !enemy.alive || !overlap(shot, enemy)) continue;
           damageEnemy(enemy, 1);
+          if (shot.taser && enemy.alive) enemy.stun = 1.25;
           shot.life = 0;
         }
         if (boss && boss.alive && shot.life > 0 && overlap(shot, boss)) {
@@ -1086,6 +1132,16 @@
       rect(x + 42, 196 - tall + 8, 13, 17, '#7d98a0');
       rect(x + 42, 196 - tall + 8, 13, 2, '#bfd0be');
       rect(x + 29, 196 - 29, 12, 29, '#152238');
+    }
+    if (levelIndex === 1 && sprites.cordoba.complete && sprites.cordoba.naturalWidth) {
+      ctx.save();
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      for (const [worldX, sx, sw, width, height] of [[160, 0, 920, 220, 143], [660, 920, 580, 165, 186], [1110, 1500, 672, 220, 117]]) {
+        const x = worldX - cam;
+        if (x + width > 0 && x < W) ctx.drawImage(sprites.cordoba, sx, 0, sw, 724, x, 230 - height, width, height);
+      }
+      ctx.restore();
     }
     if (levelIndex === 0 && sprites.buenosAires.complete && sprites.buenosAires.naturalWidth) {
       ctx.save();
@@ -1231,6 +1287,33 @@
     if (!enemy.alive) return;
     const x = Math.round(enemy.x - cam);
     const y = Math.round(enemy.y);
+    if (['narco', 'ensobrado', 'econochanta', 'agorero'].includes(enemy.type)) {
+      if (sprites.randomEnemies.complete && sprites.randomEnemies.naturalWidth) {
+        const index = ['narco', 'ensobrado', 'econochanta', 'agorero'].indexOf(enemy.type);
+        const crops = [[0, 520], [520, 480], [1000, 530], [1530, 548]];
+        const [sx, sw] = crops[index];
+        ctx.save();
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(sprites.randomEnemies, sx, 0, sw, 757, x + enemy.w / 2 - 22, y + enemy.h - 43, 44, 43);
+        ctx.restore();
+        if (enemy.stun > 0) text('⚡', x + 10, y - 6, '#ffe978', 10, 'center');
+        return;
+      }
+      const colors = { narco: ['#273944', '#cb9377'], ensobrado: ['#68798b', '#e2ba99'], econochanta: ['#745a8d', '#e5c39c'], agorero: ['#4b566e', '#bdb9aa'] };
+      const [coat, face] = colors[enemy.type];
+      rect(x + 3, y + 10, 14, 11, coat);
+      rect(x + 5, y + 3, 10, 9, face);
+      rect(x + 4, y + 1, 12, 4, enemy.type === 'narco' ? '#192c33' : '#3c4350');
+      rect(x + 3, y + 21, 5, 3, '#27303a');
+      rect(x + 12, y + 21, 5, 3, '#27303a');
+      if (enemy.type === 'narco') { rect(x + 1, y + 5, 6, 2, '#192c33'); rect(x + 7, y + 8, 2, 2, '#25303a'); }
+      if (enemy.type === 'ensobrado') { rect(x - 3, y + 11, 9, 7, '#f1e4ba'); rect(x - 2, y + 13, 7, 1, '#aa7561'); }
+      if (enemy.type === 'econochanta') { rect(x - 4, y + 8, 9, 9, '#b8d7a5'); rect(x - 2, y + 13, 5, 2, '#5f9a76'); }
+      if (enemy.type === 'agorero') { rect(x - 4, y + 3, 8, 6, '#667080'); text('!', x, y + 9, '#ffe093', 7, 'center'); }
+      if (enemy.stun > 0) text('⚡', x + 10, y - 5, '#ffe978', 10, 'center');
+      return;
+    }
     if (enemy.type === 'reporter') {
       rect(x + 3, y + 9, 12, 12, '#526e85');
       rect(x + 6, y + 2, 8, 9, '#eac6a2');
@@ -1314,6 +1397,15 @@
         ctx.beginPath();
         ctx.arc(x + item.facing * (8 + progress * 9), y, 10 * (1 - progress), 0, Math.PI * 2);
         ctx.fill();
+      } else if (item.type === 'taser') {
+        ctx.strokeStyle = '#ffe978';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + item.facing * 8, y - 5);
+        ctx.lineTo(x + item.facing * 13, y + 3);
+        ctx.lineTo(x + item.facing * 22, y - 3);
+        ctx.stroke();
       } else if (item.type === 'dash') {
         ctx.strokeStyle = '#f7d76a';
         ctx.lineWidth = 4;
@@ -1429,15 +1521,15 @@
       const y = shot.y + shot.h / 2;
       ctx.save();
       ctx.shadowBlur = shot.friendly ? 13 : 7;
-      ctx.shadowColor = shot.friendly ? '#5cefff' : '#ff754f';
+      ctx.shadowColor = shot.taser ? '#ffe978' : shot.friendly ? '#5cefff' : '#ff754f';
       ctx.fillStyle = shot.color;
       ctx.beginPath();
-      ctx.arc(x, y, shot.friendly ? 6 : 5, 0, Math.PI * 2);
+      ctx.arc(x, y, shot.taser ? 4 : shot.friendly ? 6 : 5, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
-      rect(x - Math.sign(shot.vx) * 11, y - 1, 6, 2, shot.friendly ? '#d7ffff' : '#ffb18a');
+      rect(x - Math.sign(shot.vx) * 11, y - 1, 6, 2, shot.taser ? '#fff4b2' : shot.friendly ? '#d7ffff' : '#ffb18a');
     }
-    drawHero(companion.x, companion.y, heroIndex === 0 ? 1 : 0, false, player.facing, companion);
+    drawHero(companion.x, companion.y, companionHero(), false, player.facing, companion);
     if (player.invulnerable <= 0 || Math.floor(elapsed * 12) % 2 === 0) drawHero(player.x, player.y, heroIndex, true, player.facing, player);
     drawEffects();
     for (const p of particles) rect(p.x - cam, p.y, 2, 2, p.color);
@@ -1466,7 +1558,7 @@
       }
       return;
     }
-    if (event.target instanceof Element && event.target.closest('#ideasPanel, #scoreForm')) return;
+    if (!ui.rankingPanel.hidden || (event.target instanceof Element && event.target.closest('#ideasPanel, input, textarea, [contenteditable]'))) return;
     if (!ui.rotate.hidden && event.code === 'Escape') {
       closeRotatePrompt();
       ui.play.focus();
@@ -1611,7 +1703,10 @@
   ui.rankingButton.addEventListener('click', () => {
     ui.rankingPanel.hidden = !ui.rankingPanel.hidden;
     if (!ui.rankingPanel.hidden && window.matchMedia('(max-width: 780px), (hover: none) and (pointer: coarse)').matches) document.getElementById('ideasPanel').hidden = true;
-    if (!ui.rankingPanel.hidden) loadRanking();
+    if (!ui.rankingPanel.hidden) {
+      loadRanking();
+      (ui.scoreForm.hidden ? ui.rankingClose : ui.playerAlias).focus();
+    }
   });
   ui.rankingClose.addEventListener('click', () => { ui.rankingPanel.hidden = true; });
   ui.shareButton.addEventListener('click', shareGame);

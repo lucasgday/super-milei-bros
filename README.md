@@ -1,6 +1,6 @@
 # Super Milei Bros
 
-Un fan game satírico de plataformas, jugable en el navegador y de código abierto. Javier y Karina atraviesan Buenos Aires en La avenida, que termina con Cristina como jefa intermedia y desbloquea a Patricia. Después viajan a Córdoba en La economía para enfrentar a la inflación. Hay grupos de piqueteros (cada multitud cuenta como un solo enemigo), ñoquis y billetes de inflación. El enfrentamiento con La Casta queda para futuras versiones.
+Un fan game satírico de plataformas, jugable en el navegador y de código abierto. Javier y Karina atraviesan Buenos Aires en La avenida, que termina con Cristina como jefa intermedia y desbloquea a Patricia. Después viajan a Córdoba en La economía para enfrentar a la inflación. Hay grupos de piqueteros (cada multitud cuenta como un solo enemigo), ñoquis y billetes de inflación. En cada partida cambian algunos adversarios y aparecen, como caricaturas genéricas, narcos, periodistas ensobrados, econochantas o agoreros del fracaso. El enfrentamiento con La Casta queda para futuras versiones.
 
 ## Jugar
 
@@ -14,7 +14,7 @@ Abrí `index.html` en un navegador moderno. También podés servir la carpeta co
 | Saltar | Espacio, W o flecha arriba |
 | Atacar | J |
 | Habilidad especial | K |
-| Cambiar Javier / Karina | Q |
+| Cambiar entre los dos elegidos | Q |
 | Pausar | P |
 
 En móvil, usá las flechas de la izquierda para moverte y los botones de la derecha para atacar, saltar, usar el poder y cambiar de personaje. Los controles transparentes flotan sobre el escenario tanto en vertical como en horizontal y admiten dos dedos a la vez. También siguen disponibles los gestos sobre el escenario: mantener pulsada la mitad izquierda para moverse; tocar la mitad derecha para saltar, deslizar a los lados para atacar, hacia arriba para la habilidad o hacia abajo para cambiar. En horizontal, la pausa queda superpuesta arriba al centro y el control de música se oculta para dejar más espacio.
@@ -23,6 +23,8 @@ Conan corre cuando te acercás: hay que alcanzarlo para ganar su bonus. Cristina
 
 Cada nivel tiene una introducción narrativa antes de empezar y un cierre al llegar a la meta. Tras derrotar a Cristina, su sprite queda detrás de rejas como parte de la ficción satírica del juego. El botón GUARDAR PUNTAJE del cierre abre el formulario de alias y el ranking.
 
+En la introducción de cada nivel elegís dos personajes diferentes: uno activo y otro que lo acompaña a la vista. Patricia se puede elegir tras desbloquearla al superar Buenos Aires. Su ataque básico es un taser de alcance corto que aturde adversarios; su habilidad especial sigue siendo la embestida.
+
 Al tocar JUGAR en móvil, el juego solicita pantalla completa cuando el navegador la admite; el botón ⛶ permite volver a activarla o salir. Si el navegador no ofrece esa API, agregá el sitio a la pantalla de inicio y abrilo desde su ícono para jugar sin la barra de direcciones.
 
 ## Desarrollo
@@ -30,6 +32,10 @@ Al tocar JUGAR en móvil, el juego solicita pantalla completa cuando el navegado
 No hay dependencias ni compilación. El juego está hecho con Canvas 2D, JavaScript y CSS. Los fondos y objetos se dibujan en `game.js`; los sprites están en `assets/`. Cada personaje jugable tiene una tira animada de cuatro cuadros (quieto, dos de carrera y ataque), declarada en `heroes` mediante `sprite`; ese formato también se usará para los próximos personajes. La música se reproduce al empezar la partida y se puede silenciar desde el botón superior. La mayoría de los efectos se sintetizan con Web Audio; la risa y el rugido usan muestras de audio acreditadas abajo.
 
 `assets/buenos-aires-landmarks.png` es un sprite transparente generado con la herramienta integrada de OpenAI a partir de esta consigna: «Tres fachadas reconocibles de Buenos Aires, Obelisco, Casa Rosada y Teatro Colón, separadas en una tira, pixel art de plataformas, elevaciones frontales y fondo transparente». Se usa como escenografía raster en el nivel 1-1, por encima de los edificios genéricos y detrás de personajes y objetos.
+
+`assets/cordoba-landmarks.png` es una lámina transparente generada con la herramienta integrada de OpenAI a partir de esta consigna: «Tres hitos reconocibles de Córdoba, Argentina: fachada del Cabildo con arcos y torre del reloj, Iglesia de los Capuchinos con torres neogóticas, y La Cañada con puente de piedra y árboles; tres escenas separadas en una fila, elevaciones frontales en estilo pixel art de plataformas, sin cielo, suelo, personas ni texto». Las referencias públicas de los lugares se pueden consultar en [Cabildo y Catedral, foto de dominio público](https://commons.wikimedia.org/wiki/File:Catedral_y_Cabildo_de_Cordoba.JPG), [Iglesia de los Capuchinos](https://commons.wikimedia.org/wiki/File:Iglesia_de_los_Capuchinos_Cordoba_Argentina.jpg) y [La Cañada](https://commons.wikimedia.org/wiki/File:La_Ca%C3%B1ada.jpg). Estas fotos no están incluidas en el repositorio: la lámina es una recreación generada, no una reproducción de esos archivos.
+
+`assets/random-enemies.png` es una lámina de cuatro sprites generada con la herramienta integrada de OpenAI a partir de esta consigna: «Cuatro arquetipos ficticios y genéricos en una fila, narco, periodista ensobrado, econochanta y agorero del fracaso, separados y orientados a la izquierda, con siluetas expresivas en pixel art de plataformas y fondo transparente; sin nombres, logotipos ni personas identificables».
 
 Los textos narrativos son paráfrasis y ficción, no transcripciones literales salvo la cita breve atribuida en el cierre del nivel 1-1. Fuentes: [discurso en el Cabildo de Córdoba (2024)](https://www.casarosada.gob.ar/informacion/discursos/50514-cadena-nacional-del-presidente-de-la-nacion-javier-milei-en-el-dia-de-la-conmemoracion-del-aniversario-numero-214-de-la-revolucion-de-mayo-en-el-cabildo-de-cordoba), [discurso en el IERAL (2024)](https://www.casarosada.gob.ar/informacion/discursos/50748-palabras-del-presidente-de-la-nacion-javier-milei-en-el-ieral-desde-la-provincia-de-cordoba) y [apertura del Congreso (2026)](https://www.casarosada.gob.ar/slider-principal/51181-discurso-del-presidente-de-la-nacion-javier-milei-en-la-apertura-del-144-periodo-de-sesiones-ordinarias-del-congreso-de-la-nacion).
 
