@@ -56,6 +56,8 @@
     buenosAires: new Image(),
     cordoba: new Image(),
     randomEnemies: new Image(),
+    politicalEnemies: new Image(),
+    schiaretti: new Image(),
   };
   sprites.heroes.src = './assets/heroes.png';
   sprites.javierAnimated.src = './assets/javier-animated.png';
@@ -68,6 +70,8 @@
   sprites.buenosAires.src = './assets/buenos-aires-landmarks.png';
   sprites.cordoba.src = './assets/cordoba-landmarks.png';
   sprites.randomEnemies.src = './assets/random-enemies.png';
+  sprites.politicalEnemies.src = './assets/political-enemies.png';
+  sprites.schiaretti.src = './assets/schiaretti.png';
   const openingTrack = new Audio('./assets/avenida-rock.mp3');
   openingTrack.loop = true;
   openingTrack.volume = 0;
@@ -121,7 +125,7 @@
     ground: [[0, 380], [420, 900], [940, 1360], [1400, WORLD]],
     ledges: [[145, 192, 86], [290, 166, 74], [510, 189, 86], [680, 168, 80], [810, 184, 65], [1030, 178, 90], [1210, 158, 82], [1480, 183, 78]],
     enemies: [
-      ['piquetero', 245, 208], ['noqui', 535, 208, true], ['piquetero', 720, 208],
+      ['piquetero', 245, 208], ['noqui', 535, 208, true], ['piquetero', 720, 208], ['progre', 830, 208],
       ['bill', 1080, 126], ['noqui', 1225, 208, true], ['piquetero', 1470, 208],
     ],
     coins: [[130, 164], [164, 164], [308, 139], [342, 139], [520, 164], [690, 141], [1020, 148], [1052, 148], [1225, 128], [1495, 155]],
@@ -132,7 +136,7 @@
     ledges: [[165, 187, 78], [300, 164, 82], [525, 178, 90], [690, 151, 75], [805, 188, 62], [1045, 177, 80], [1205, 156, 85], [1480, 178, 86]],
     enemies: [
       ['bill', 225, 133], ['noqui', 365, 208, true], ['bill', 545, 133], ['bill', 735, 116],
-      ['noqui', 955, 208, true], ['bill', 1100, 130], ['noqui', 1280, 208, true], ['bill', 1475, 130],
+      ['zurdo', 1000, 208], ['bill', 1100, 130], ['noqui', 1180, 208, true], ['sindigarca', 1280, 208], ['bill', 1475, 130],
     ],
     coins: [[135, 164], [190, 158], [328, 138], [510, 151], [675, 126], [810, 161], [1020, 150], [1190, 127], [1340, 163], [1515, 150]],
   }];
@@ -148,8 +152,8 @@
     },
     {
       introTitle: 'LA BATALLA DE LA ECONOMÍA',
-      intro: 'El equilibrio fiscal marca el rumbo. En Córdoba, la inflación aguarda entre los edificios de la Bolsa. La segunda batalla comienza.',
-      introSource: 'https://www.casarosada.gob.ar/informacion/discursos/50748-palabras-del-presidente-de-la-nacion-javier-milei-en-el-ieral-desde-la-provincia-de-cordoba',
+      intro: '“La Docta, Córdoba, corazón productivo de nuestra Nación”, dijo Milei. Bajo sus torres, la dupla avanza contra la inflación. ¡Vamos, los leones!',
+      introSource: 'https://www.casarosada.gob.ar/informacion/discursos/50514-cadena-nacional-del-presidente-de-la-nacion-javier-milei-en-el-dia-de-la-conmemoracion-del-aniversario-numero-214-de-la-revolucion-de-mayo-en-el-cabildo-de-cordoba',
       outroTitle: 'EQUILIBRIO',
       outro: 'La inflación cayó en este nivel. La batalla por el déficit cero continúa. Más allá espera la Casta.',
       outroSource: 'https://www.casarosada.gob.ar/informacion/discursos/50748-palabras-del-presidente-de-la-nacion-javier-milei-en-el-ieral-desde-la-provincia-de-cordoba',
@@ -204,13 +208,16 @@
   try { unlockedLevel2 = localStorage.getItem('smb-level2-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
   ui.level2Start.hidden = !unlockedLevel2;
 
-  const randomEnemyTypes = ['noqui', 'narco', 'ensobrado', 'econochanta', 'agorero'];
+  const randomEnemyTypes = ['noqui', 'narco', 'ensobrado', 'econochanta', 'agorero', 'progre', 'zurdo', 'sindigarca'];
   const companionHero = () => selectedDuo.find(index => index !== heroIndex) ?? selectedDuo[1];
 
   function renderDuoSelector() {
     for (const slot of ui.duoSelector.querySelectorAll('.duo-slot')) {
       const slotIndex = Number(slot.dataset.slot);
       const options = slot.querySelector('.duo-options');
+      const avatar = slot.querySelector('.duo-avatar');
+      avatar.className = `duo-avatar duo-avatar-${heroes[selectedDuo[slotIndex]].name.toLowerCase()}`;
+      avatar.setAttribute('aria-label', `Vista previa de ${heroes[selectedDuo[slotIndex]].name}`);
       options.replaceChildren();
       heroes.forEach((hero, index) => {
         const button = document.createElement('button');
@@ -470,8 +477,8 @@
     enemies = data.enemies.map(([baseType, baseX, y, randomize]) => {
       const type = randomize ? randomEnemyTypes[Math.floor(Math.random() * randomEnemyTypes.length)] : baseType;
       const x = randomize ? baseX + Math.round((Math.random() - .5) * 32) : baseX;
-      return { type, x, y, w: type === 'piquetero' ? 48 : type === 'bill' ? 19 : 20, h: type === 'bill' ? 17 : 22,
-        startX: x, startY: y, direction: -1, hp: type === 'piquetero' ? 3 : 2, alive: true, phase: Math.random() * 6, stun: 0 };
+      return { type, x, y, w: type === 'piquetero' ? 48 : type === 'sindigarca' ? 26 : type === 'bill' ? 19 : 20, h: type === 'bill' ? 17 : 22,
+        startX: x, startY: y, direction: -1, hp: type === 'piquetero' || type === 'sindigarca' ? 3 : 2, alive: true, phase: Math.random() * 6, stun: 0 };
     });
     coins = data.coins.map(([x, y]) => ({ x, y, got: false }));
     shots = [];
@@ -940,7 +947,7 @@
       if (!enemy.alive) continue;
       if (!encountered.has(enemy.type) && enemy.x > player.x && enemy.x - player.x < 105) {
         encountered.add(enemy.type);
-        const introductions = { piquetero: 'APARECEN LOS PIQUETEROS', noqui: 'CUIDADO CON LOS ÑOQUIS', bill: 'SE DISPARA LA INFLACIÓN', reporter: 'LLEGA LA PRENSA', envelope: 'CAEN SOBRES', criticism: 'CRÍTICAS DE ALIADOS', narco: 'NARCOS EN EL CAMINO', ensobrado: 'PERIODISTAS ENSOBRADOS', econochanta: 'APARECEN LOS ECONOCHANTAS', agorero: 'AGOREROS DEL FRACASO' };
+        const introductions = { piquetero: 'APARECEN LOS PIQUETEROS', noqui: 'CUIDADO CON LOS ÑOQUIS', bill: 'SE DISPARA LA INFLACIÓN', reporter: 'LLEGA LA PRENSA', envelope: 'CAEN SOBRES', criticism: 'CRÍTICAS DE ALIADOS', narco: 'NARCOS EN EL CAMINO', ensobrado: 'PERIODISTAS ENSOBRADOS', econochanta: 'APARECEN LOS ECONOCHANTAS', agorero: 'AGOREROS DEL FRACASO', progre: 'PROGRES EN EL CAMINO', zurdo: 'ZURDOS SUCIOS', sindigarca: 'APARECEN LOS SINDIGARCAS' };
         message(introductions[enemy.type], 2.6, 'enemy');
       }
       enemy.phase += dt;
@@ -951,7 +958,8 @@
         enemy.x = enemy.startX + Math.sin(enemy.phase * 1.6) * 24;
         enemy.y = enemy.startY + Math.sin(enemy.phase * 2.1) * 9;
       } else {
-        enemy.x += enemy.direction * (enemy.type === 'noqui' || enemy.type === 'narco' ? 43 : 28) * dt;
+        const speed = enemy.type === 'sindigarca' ? 22 : enemy.type === 'zurdo' ? 46 : enemy.type === 'noqui' || enemy.type === 'narco' ? 43 : 28;
+        enemy.x += enemy.direction * speed * dt;
         if (Math.abs(enemy.x - enemy.startX) > 42) enemy.direction *= -1;
         if (enemy.type === 'noqui' || enemy.type === 'reporter') enemy.y = enemy.startY - Math.abs(Math.sin(enemy.phase * 2.2)) * (enemy.type === 'reporter' ? 2 : 19);
       }
@@ -1143,6 +1151,21 @@
       }
       ctx.restore();
     }
+    if (levelIndex === 1 && sprites.schiaretti.complete && sprites.schiaretti.naturalWidth) {
+      const x = 350 - cam;
+      if (x > -55 && x < W + 10) {
+        ctx.save();
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(sprites.schiaretti, 140, 45, 680, 1450, x, 132, 38, 58);
+        ctx.restore();
+        rect(x - 10, 119, 58, 10, '#c9a56f');
+        ctx.fillStyle = '#25333d';
+        ctx.font = 'bold 6px Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('SCHIARETTI', Math.round(x + 19), 126);
+        ctx.textAlign = 'left';
+      }
+    }
     if (levelIndex === 0 && sprites.buenosAires.complete && sprites.buenosAires.naturalWidth) {
       ctx.save();
       ctx.imageSmoothingEnabled = true;
@@ -1287,6 +1310,22 @@
     if (!enemy.alive) return;
     const x = Math.round(enemy.x - cam);
     const y = Math.round(enemy.y);
+    if (['progre', 'zurdo', 'sindigarca'].includes(enemy.type)) {
+      if (sprites.politicalEnemies.complete && sprites.politicalEnemies.naturalWidth) {
+        const index = ['progre', 'zurdo', 'sindigarca'].indexOf(enemy.type);
+        const crops = [[0, 700], [700, 740], [1440, 732]];
+        const [sx, sw] = crops[index];
+        ctx.save();
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(sprites.politicalEnemies, sx, 0, sw, 724, x + enemy.w / 2 - 23, y + enemy.h - 44, 46, 44);
+        ctx.restore();
+      } else {
+        rect(x, y, enemy.w, enemy.h, enemy.type === 'progre' ? '#3da89e' : enemy.type === 'zurdo' ? '#ac4d48' : '#414453');
+      }
+      if (enemy.stun > 0) text('⚡', x + enemy.w / 2, y - 5, '#ffe978', 10, 'center');
+      return;
+    }
     if (['narco', 'ensobrado', 'econochanta', 'agorero'].includes(enemy.type)) {
       if (sprites.randomEnemies.complete && sprites.randomEnemies.naturalWidth) {
         const index = ['narco', 'ensobrado', 'econochanta', 'agorero'].indexOf(enemy.type);
