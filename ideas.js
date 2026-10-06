@@ -47,7 +47,9 @@
       vote.type = 'button';
       vote.className = 'idea-vote';
       vote.textContent = paymentEnabled ? `▲ ARS 1.000 · ${idea.votes}` : `▲ ${idea.votes} · PRÓXIMAMENTE`;
-      vote.setAttribute('aria-label', `Apoyar ${idea.title} con ARS 1.000. ${idea.votes} votos confirmados.`);
+      vote.setAttribute('aria-label', paymentEnabled
+        ? `Apoyar ${idea.title} con ARS 1.000. ${idea.votes} votos confirmados.`
+        : `${idea.title}: ${idea.votes} votos confirmados. Próximamente.`);
       vote.disabled = !paymentEnabled;
       vote.addEventListener('click', () => submitVote(idea, vote));
       content.append(heading, description);
