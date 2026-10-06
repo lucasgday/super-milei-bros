@@ -58,6 +58,8 @@
     javierAnimated: new Image(),
     karinaAnimated: new Image(),
     patriciaAnimated: new Image(),
+    totoAnimated: new Image(),
+    sturzeneggerAnimated: new Image(),
     patricia: new Image(),
     cristina: new Image(),
     enemies: new Image(),
@@ -129,6 +131,10 @@
       crops: [[48, 448], [528, 500], [1072, 472], [1568, 604]] },
     { name: 'PATRICIA', weapon: 'TASER', speed: 150, jump: 290, ability: 'EMBESTIDA', sprite: sprites.patriciaAnimated,
       crops: [[48, 448], [580, 452], [1096, 432], [1576, 584]] },
+    { name: 'TOTO', weapon: 'CALCULADORA', speed: 137, jump: 290, ability: 'AJUSTE DE CUENTAS', sprite: sprites.totoAnimated,
+      crops: [[0, 543], [543, 543], [1086, 543], [1629, 543]] },
+    { name: 'STURZENEGGER', weapon: 'DECRETOS', speed: 137, jump: 290, ability: 'DESREGULACIÓN', sprite: sprites.sturzeneggerAnimated,
+      crops: [[0, 543], [543, 543], [1086, 543], [1629, 543]] },
   ];
 
   const levelData = [{
@@ -157,7 +163,7 @@
     ground: [[0, 395], [440, 870], [920, 1370], [1420, WORLD]],
     ledges: [[160, 185, 85], [310, 164, 70], [525, 180, 82], [695, 158, 74], [810, 185, 65], [1040, 176, 84], [1210, 154, 78], [1480, 180, 80]],
     enemies: [
-      ['sindigarca', 235, 208], ['ensobrado', 530, 208], ['agorero', 705, 208], ['noqui', 835, 208, true],
+      ['sindigarca', 235, 208], ['mortero', 530, 208], ['agorero', 705, 208], ['noqui', 835, 208, true],
       ['econochanta', 1035, 208], ['ensobrado', 1195, 208], ['sindigarca', 1300, 208], ['bill', 1490, 136],
     ],
     coins: [[135, 157], [182, 157], [320, 135], [525, 152], [690, 128], [810, 155], [1035, 147], [1205, 126], [1325, 151], [1505, 153]],
@@ -252,7 +258,10 @@
   let shieldTime = 0;
   let abilityCd = 0;
   let dogs = [];
+  let packCharges = 0;
   let unlockedPatricia = false;
+  let unlockedToto = false;
+  let unlockedSturzenegger = false;
   let unlockedLevel2 = false;
   let unlockedLevel3 = false;
   let muted = false;
@@ -271,12 +280,15 @@
   let enemyAnnounceAfter = 0;
   let controlsPausedGame = false;
   try { unlockedPatricia = localStorage.getItem('smb-patricia-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
+  try { unlockedToto = localStorage.getItem('smb-toto-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
+  try { unlockedSturzenegger = localStorage.getItem('smb-sturzenegger-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
   try { unlockedLevel2 = localStorage.getItem('smb-level2-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
   try { unlockedLevel3 = localStorage.getItem('smb-level3-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
   ui.level2Start.hidden = !unlockedLevel2;
   ui.level3Start.hidden = !unlockedLevel3;
 
   const randomEnemyTypes = ['noqui', 'narco', 'ensobrado', 'econochanta', 'agorero', 'progre', 'zurdo', 'sindigarca'];
+  const heroUnlocked = index => index < 2 || (index === 2 && unlockedPatricia) || (index === 3 && unlockedToto) || (index === 4 && unlockedSturzenegger);
   const companionHero = () => selectedDuo.find(index => index !== heroIndex) ?? selectedDuo[1];
 
   function renderDuoSelector() {
@@ -290,9 +302,9 @@
       heroes.forEach((hero, index) => {
         const button = document.createElement('button');
         button.type = 'button';
-        button.innerHTML = `<strong>${hero.name}${index === 2 && !unlockedPatricia ? ' 🔒' : ''}</strong><small>${hero.weapon}</small>`;
+        button.innerHTML = `<strong>${hero.name}${!heroUnlocked(index) ? ' 🔒' : ''}</strong><small>${hero.weapon}</small>`;
         button.setAttribute('aria-label', `${hero.name}: ${hero.weapon}, habilidad ${hero.ability}`);
-        button.disabled = (index === 2 && !unlockedPatricia) || selectedDuo[1 - slotIndex] === index;
+        button.disabled = !heroUnlocked(index) || selectedDuo[1 - slotIndex] === index;
         button.setAttribute('aria-pressed', String(selectedDuo[slotIndex] === index));
         button.addEventListener('click', () => {
           selectedDuo[slotIndex] = index;
@@ -558,11 +570,13 @@
     ui.level.textContent = `1-${levelIndex + 1}`;
     ui.score.textContent = String(score).padStart(6, '0');
     ui.ability.textContent = heroes[heroIndex].ability;
-    ui.roster.textContent = unlockedPatricia ? 'PATRICIA ✓ DESBLOQUEADA' : 'PATRICIA 🔒';
+    ui.roster.textContent = ['PATRICIA', 'TOTO', 'STURZENEGGER'].map((name, offset) => `${name} ${heroUnlocked(offset + 2) ? '✓' : '🔒'}`).join(' · ');
   }
 
   function loadLevel(index) {
     levelIndex = index;
+    if (unlockedToto) sprites.totoAnimated.src ||= './assets/toto-animated-small.png';
+    if (unlockedSturzenegger) sprites.sturzeneggerAnimated.src ||= './assets/sturzenegger-animated-small.png';
     if (index === 1) {
       sprites.cordoba.src ||= './assets/cordoba-landmarks-small.png';
       sprites.schiaretti.src ||= './assets/schiaretti-cutout-small.png';
@@ -580,7 +594,7 @@
     enemies = data.enemies.map(([baseType, baseX, y, randomize]) => {
       const type = randomize ? randomEnemyTypes[Math.floor(Math.random() * randomEnemyTypes.length)] : baseType;
       const x = randomize ? baseX + Math.round((Math.random() - .5) * 32) : baseX;
-      return { type, x, y, w: type === 'piquetero' ? 48 : type === 'sindigarca' ? 26 : type === 'bill' ? 19 : 20, h: type === 'bill' ? 17 : 22,
+      return { type, x, y, w: type === 'piquetero' ? 48 : type === 'sindigarca' || type === 'mortero' ? 26 : type === 'bill' ? 19 : 20, h: type === 'bill' ? 17 : 22,
         startX: x, startY: y, direction: -1, hp: type === 'piquetero' || type === 'sindigarca' ? 3 : 2, alive: true, phase: Math.random() * 6, stun: 0 };
     });
     coins = data.coins.map(([x, y]) => ({ x, y, got: false }));
@@ -604,6 +618,7 @@
       ? [['MURRAY', 300, 1, 245, 350], ['CONAN', 850, 0, 700, 875], ['MILTON', 1220, 2, 1150, 1330]]
       : index === 1 ? [['ROBERT', 350, 3, 275, 395], ['LUCAS', 1200, 4, 1120, 1340]] : [])
       .map(([name, x, sprite, minX, maxX]) => ({ name, x, sprite, minX, maxX, direction: 1, fleeing: false, collected: false }));
+    packCharges = 0;
     shieldTime = 0;
     abilityCd = 0;
     cam = 0;
@@ -713,9 +728,25 @@
         : 'En esta ficción satírica, Cristina queda tras las rejas. “Por eso tienen a su líder presa”, dijo Milei en el Congreso. Patricia ya forma parte de tu dupla.';
     }
     if (win && levelIndex === 1) {
+      const firstUnlock = !unlockedToto;
+      unlockedToto = true;
       unlockedLevel3 = true;
+      try { localStorage.setItem('smb-toto-unlocked', 'yes'); } catch { /* The unlock remains available this session. */ }
       try { localStorage.setItem('smb-level3-unlocked', 'yes'); } catch { /* The unlock remains available this session. */ }
       ui.level3Start.hidden = false;
+      storyScenes[1].outro = firstUnlock
+        ? 'La inflación cayó en esta ficción. “Cuando nosotros dijimos que íbamos a ir a déficit cero, dijeron que estábamos locos”, dijo Milei en Córdoba. Toto se desbloqueó. Más allá espera la Casta.'
+        : 'La inflación cayó en esta ficción. “Cuando nosotros dijimos que íbamos a ir a déficit cero, dijeron que estábamos locos”, dijo Milei en Córdoba. Toto ya forma parte de tu dupla.';
+      syncUi();
+    }
+    if (win && levelIndex === 2) {
+      const firstUnlock = !unlockedSturzenegger;
+      unlockedSturzenegger = true;
+      try { localStorage.setItem('smb-sturzenegger-unlocked', 'yes'); } catch { /* The unlock remains available this session. */ }
+      storyScenes[2].outro = firstUnlock
+        ? 'El Déficit Fiscal cayó, pero el mapa sigue abierto. “Vetaremos todos los proyectos que atenten contra el equilibrio fiscal”, dijo Milei en el Congreso. Sturzenegger se desbloqueó.'
+        : 'El Déficit Fiscal cayó, pero el mapa sigue abierto. “Vetaremos todos los proyectos que atenten contra el equilibrio fiscal”, dijo Milei en el Congreso. Sturzenegger ya forma parte de tu dupla.';
+      syncUi();
     }
     ui.overlay.hidden = false;
     ui.overlay.classList.remove('story-intro');
@@ -874,13 +905,14 @@
 
   function attack() {
     if (player.attackCd > 0 || state !== 'playing') return;
-    player.attackCd = heroIndex === 1 ? .32 : heroIndex === 2 ? .55 : .44;
+    player.attackCd = heroIndex === 1 ? .32 : heroIndex === 2 ? .55 : heroIndex > 2 ? .4 : .44;
     player.attackPose = .28;
-    if (heroIndex === 1 || heroIndex === 2) {
+    if (heroIndex !== 0) {
       const taser = heroIndex === 2;
+      const economic = heroIndex >= 3;
       shots.push({ x: player.x + (player.facing > 0 ? 14 : -9), y: player.y + 7,
         w: taser ? 18 : 11, h: taser ? 8 : 10, vx: player.facing * (taser ? 240 : 270), vy: 0,
-        friendly: true, taser, color: taser ? '#ffe978' : '#a4e7f2', life: taser ? .55 : 1.5 });
+        friendly: true, taser, color: taser ? '#ffe978' : economic ? '#f4d276' : '#a4e7f2', life: taser ? .55 : 1.5 });
       effect(taser ? 'taser' : 'launch', player.x + 7, player.y + 12, player.facing, .18);
     } else {
       effect('slash', player.x + 7, player.y + 10, player.facing, .25);
@@ -890,7 +922,7 @@
       }
       if (boss && boss.alive && boss.invulnerable <= 0 && overlap(hit, boss)) damageBoss(2);
     }
-    playSfx(['attackJavier', 'attackKarina', 'attackPatricia'][heroIndex]);
+    playSfx(['attackJavier', 'attackKarina', 'attackPatricia', 'attackKarina', 'attackKarina'][heroIndex]);
   }
 
   function ability() {
@@ -911,7 +943,7 @@
       if (boss && boss.alive && Math.abs(boss.x - player.x) < 95) damageBoss(2);
       spawnParticles(player.x + 7, player.y + 7, '#ffe07a', 20);
       playSfx('roar');
-    } else {
+    } else if (heroIndex === 2) {
       const oldX = player.x;
       player.x = clamp(player.x + player.facing * 62, 0, WORLD - player.w);
       effect('dash', oldX + 7, player.y + 10, player.facing, .38);
@@ -919,6 +951,26 @@
       for (const enemy of enemies) if (enemy.alive && Math.abs(enemy.x - player.x) < 35) damageEnemy(enemy, 2);
       if (boss && boss.alive && Math.abs(boss.x - player.x) < 46) damageBoss(2);
       message('¡EMBESTIDA!', .8);
+      playSfx('dash');
+    } else if (heroIndex === 3) {
+      enemies.forEach(enemy => { if (enemy.alive && Math.abs(enemy.x - player.x) < 110) damageEnemy(enemy, 1); });
+      if (boss && boss.alive && Math.abs(boss.x - player.x) < 115) damageBoss(1);
+      effect('roar', player.x + 7, player.y + 10, player.facing, .45);
+      message('¡AJUSTE DE CUENTAS!', 1);
+      playSfx('coin');
+    } else {
+      shots = shots.filter(shot => shot.friendly || Math.abs(shot.x - player.x) > 150);
+      enemies.forEach(enemy => { if (enemy.alive && Math.abs(enemy.x - player.x) < 115) enemy.stun = 2; });
+      effect('shield', player.x + 7, player.y + 10, player.facing, .45);
+      message('¡DESREGULACIÓN!', 1);
+      playSfx('shield');
+    }
+    if (packCharges > 0) {
+      packCharges--;
+      enemies.forEach(enemy => { if (enemy.alive && Math.abs(enemy.x - player.x) < 155) damageEnemy(enemy, 2); });
+      if (boss && boss.alive && Math.abs(boss.x - player.x) < 155) damageBoss(2);
+      effect('pack', player.x + 7, player.y + 12, player.facing, .55);
+      message(`¡ATACA LA MANADA! ${packCharges} CARGAS`, 1.3);
       playSfx('dash');
     }
   }
@@ -1070,11 +1122,12 @@
       }
       if (overlap(player, { x: dog.x - 12, y: 202, w: 30, h: 28 })) {
         dog.collected = true;
+        packCharges++;
         const gainedLife = lives < 3;
         lives = Math.min(3, lives + 1);
         score += 250;
         spawnParticles(dog.x, 210, '#ffe493', 15);
-        message(gainedLife ? `¡ATRAPASTE A ${dog.name}! +1 VIDA` : `¡ATRAPASTE A ${dog.name}! +250`, 1.4);
+        message(gainedLife ? `¡${dog.name}! +1 VIDA Y ATAQUE EN K` : `¡${dog.name}! +250 Y ATAQUE EN K`, 1.6);
         playSfx(gainedLife ? 'life' : 'coin');
         syncUi();
       }
@@ -1084,7 +1137,7 @@
       if (!enemy.alive) continue;
       if (elapsed >= enemyAnnounceAfter && !encountered.has(enemy.type) && enemy.x > player.x && enemy.x - player.x < 105) {
         encountered.add(enemy.type);
-        const introductions = { piquetero: 'APARECEN LOS PIQUETEROS', noqui: 'CUIDADO CON LOS ÑOQUIS', bill: 'SE DISPARA LA INFLACIÓN', reporter: 'LLEGA LA PRENSA', envelope: 'CAEN SOBRES', criticism: 'CRÍTICAS DE ALIADOS', narco: 'NARCOS EN EL CAMINO', ensobrado: 'PERIODISTAS ENSOBRADOS', econochanta: 'APARECEN LOS ECONOCHANTAS', agorero: 'AGOREROS DEL FRACASO', progre: 'PROGRES EN EL CAMINO', zurdo: 'ZURDOS SUCIOS', sindigarca: 'APARECEN LOS SINDIGARCAS' };
+        const introductions = { piquetero: 'APARECEN LOS PIQUETEROS', noqui: 'CUIDADO CON LOS ÑOQUIS', bill: 'SE DISPARA LA INFLACIÓN', reporter: 'LLEGA LA PRENSA', envelope: 'CAEN SOBRES', criticism: 'CRÍTICAS DE ALIADOS', narco: 'NARCOS EN EL CAMINO', ensobrado: 'PERIODISTAS ENSOBRADOS', econochanta: 'APARECEN LOS ECONOCHANTAS', agorero: 'AGOREROS DEL FRACASO', progre: 'PROGRES EN EL CAMINO', zurdo: 'ZURDOS EN EL CAMINO', sindigarca: 'APARECEN LOS SINDIGARCAS', mortero: 'LLEGA EL SINDICALISTA DEL MORTERO' };
         message(introductions[enemy.type], 2.6, 'enemy');
       }
       enemy.phase += dt;
@@ -1096,7 +1149,7 @@
         enemy.x = enemy.startX + Math.sin(enemy.phase * (criticism ? 2.2 : 1.6)) * (criticism ? 34 : 24);
         enemy.y = enemy.startY + Math.sin(enemy.phase * 2.1) * (criticism ? 15 : 9);
       } else {
-        const speed = enemy.type === 'sindigarca' ? 22 : enemy.type === 'zurdo' ? 46 : enemy.type === 'noqui' || enemy.type === 'narco' ? 43 : 28;
+        const speed = enemy.type === 'mortero' ? 16 : enemy.type === 'sindigarca' ? 22 : enemy.type === 'zurdo' ? 46 : enemy.type === 'noqui' || enemy.type === 'narco' ? 43 : 28;
         enemy.x += enemy.direction * speed * dt;
         if (Math.abs(enemy.x - enemy.startX) > 42 || !hasGroundUnder(enemy.x + (enemy.direction < 0 ? -4 : enemy.w + 4))) enemy.direction *= -1;
         if (enemy.type === 'noqui' || enemy.type === 'reporter') enemy.y = enemy.startY - Math.abs(Math.sin(enemy.phase * 2.2)) * (enemy.type === 'reporter' ? 2 : 19);
@@ -1108,6 +1161,16 @@
           shots.push({ x: enemy.x - 4, y: enemy.y + 8, w: 7, h: 6, vx: -95, vy: 0,
             friendly: false, color: '#d8f4ff', life: 1.5 });
           effect('launch', enemy.x, enemy.y + 10, -1, .15);
+          playSfx('bossShot');
+        }
+      }
+      if (enemy.type === 'mortero' && enemy.stun <= 0 && player.x < enemy.x && enemy.x - player.x < 240) {
+        enemy.attackCd = (enemy.attackCd || 1.3) - dt;
+        if (enemy.attackCd <= 0) {
+          enemy.attackCd = 3.4;
+          shots.push({ x: enemy.x - 5, y: enemy.y - 5, w: 9, h: 9, vx: -105, vy: -125,
+            gravity: 175, friendly: false, color: '#eda55b', life: 2.5 });
+          effect('launch', enemy.x, enemy.y, -1, .18);
           playSfx('bossShot');
         }
       }
@@ -1142,6 +1205,7 @@
     for (const shot of shots) {
       shot.x += shot.vx * dt;
       shot.y += shot.vy * dt;
+      if (shot.gravity) shot.vy += shot.gravity * dt;
       shot.life -= dt;
       if (shot.friendly) {
         for (const enemy of enemies) {
@@ -1450,7 +1514,7 @@
           : Math.abs(motion.vx) > 8 ? 1 + Math.floor(motion.stride) % 2 : 0;
         const [sourceX, sourceWidth] = heroes[who].crops[frame];
         const width = frame === 3 ? 49 : 44;
-        ctx.drawImage(sheet, sourceX / 2, 20, sourceWidth / 2, 305, x + 7 - width / 2, y - 24, width, 46);
+        ctx.drawImage(sheet, sourceX / 2, who >= 3 ? 0 : 20, sourceWidth / 2, who >= 3 ? sheet.naturalHeight : 305, x + 7 - width / 2, y - 24, width, 46);
       } else if (who === 2) {
         ctx.drawImage(sheet, 0, 0, sheet.naturalWidth, sheet.naturalHeight, x - 14, y - 21, 43, 43);
       } else {
@@ -1474,6 +1538,21 @@
     if (!enemy.alive) return;
     const x = Math.round(enemy.x - cam);
     const y = Math.round(enemy.y);
+    if (enemy.type === 'mortero') {
+      if (sprites.politicalEnemies.complete && sprites.politicalEnemies.naturalWidth) {
+        ctx.save();
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(sprites.politicalEnemies, 720, 0, 366, 362, x - 10, y - 22, 46, 44);
+        ctx.restore();
+      } else rect(x, y, enemy.w, enemy.h, '#45546a');
+      ctx.save();
+      ctx.translate(x + 5, y + 9);
+      ctx.rotate(-.65);
+      rect(-2, -4, 5, 23, '#3b454c');
+      rect(-3, -6, 7, 4, '#a0a9a7');
+      ctx.restore();
+      return;
+    }
     if (['progre', 'zurdo', 'sindigarca'].includes(enemy.type)) {
       if (sprites.politicalEnemies.complete && sprites.politicalEnemies.naturalWidth) {
         const index = ['progre', 'zurdo', 'sindigarca'].indexOf(enemy.type);
@@ -1628,6 +1707,14 @@
           ctx.moveTo(x - item.facing * (i * 9), y - 11 + i * 10);
           ctx.lineTo(x + item.facing * (62 - progress * 24), y - 11 + i * 10);
           ctx.stroke();
+        }
+      } else if (item.type === 'pack' && sprites.mastiffs.complete && sprites.mastiffs.naturalWidth) {
+        const frameWidth = sprites.mastiffs.naturalWidth / 5;
+        for (let i = 0; i < 3; i++) {
+          const runX = x + item.facing * (progress * 145 - 16 - i * 24);
+          const runY = 201 + Math.sin(progress * 24 + i) * 5;
+          ctx.drawImage(sprites.mastiffs, i * frameWidth, 0, frameWidth, sprites.mastiffs.naturalHeight,
+            runX - 20, runY, 40, 27);
         }
       } else {
         ctx.strokeStyle = '#fff2ac';
