@@ -135,6 +135,9 @@
   .message{top:calc(94px + env(safe-area-inset-top))}
   .mobile-controls{position:absolute;z-index:5;left:0;right:0;bottom:0;min-height:0;padding:8px max(10px,env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));background:none;border:0;pointer-events:none}
   .movement-controls,.action-controls,.secondary-controls{pointer-events:none}
+  .movement-controls{gap:12px}
+  .mobile-controls .movement-controls button{width:clamp(58px,16vw,70px);height:clamp(58px,16vw,70px)}
+  .mobile-controls .movement-controls button span{font-size:28px}
   .mobile-controls button{pointer-events:auto;background:#19374666;border-color:#e2f0ed88;box-shadow:0 2px 8px #07131c55;color:#fff}
   .mobile-controls .attack-control{background:#176d6477;border-color:#c6f4e8aa}
   .mobile-controls .jump-control{background:#ba583c77;border-color:#ffe0b5aa}
