@@ -55,9 +55,9 @@
         <p class="ranking-preview" id="rankingPreview" aria-live="polite">TOP 3 · CARGANDO…</p>
         <div class="ranking-panel" id="rankingPanel" hidden>
           <div class="ranking-head"><strong id="rankingTitle">RANKING · NIVEL 1-1</strong><button id="rankingClose" type="button" aria-label="Cerrar ranking">×</button></div>
-          <form id="scoreForm" hidden>
+          <form id="scoreForm" autocomplete="off" hidden>
             <label for="playerAlias">TU ALIAS</label>
-            <input id="playerAlias" name="alias" type="text" maxlength="18" autocomplete="nickname" required placeholder="Tu nombre en el ranking">
+            <input id="playerAlias" name="alias" type="text" maxlength="18" autocomplete="off" spellcheck="false" required placeholder="Tu nombre en el ranking">
             <button type="submit">GUARDAR PUNTAJE</button>
           </form>
           <p id="rankingStatus" role="status" aria-live="polite"></p>

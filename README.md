@@ -17,9 +17,9 @@ Abrí `index.html` en un navegador moderno. También podés servir la carpeta co
 | Cambiar Javier / Karina | Q |
 | Pausar | P |
 
-En móvil, usá las flechas de la izquierda para moverte y los botones de la derecha para atacar, saltar, usar el poder y cambiar de personaje. Los controles transparentes flotan sobre el escenario tanto en vertical como en horizontal y admiten dos dedos a la vez. También siguen disponibles los gestos sobre el escenario: mantener pulsada la mitad izquierda para moverse; tocar la mitad derecha para saltar, deslizar a los lados para atacar, hacia arriba para la habilidad o hacia abajo para cambiar. La pausa queda arriba a la derecha.
+En móvil, usá las flechas de la izquierda para moverte y los botones de la derecha para atacar, saltar, usar el poder y cambiar de personaje. Los controles transparentes flotan sobre el escenario tanto en vertical como en horizontal y admiten dos dedos a la vez. También siguen disponibles los gestos sobre el escenario: mantener pulsada la mitad izquierda para moverse; tocar la mitad derecha para saltar, deslizar a los lados para atacar, hacia arriba para la habilidad o hacia abajo para cambiar. En horizontal, la pausa queda superpuesta arriba al centro y el control de música se oculta para dejar más espacio.
 
-Conan corre cuando te acercás: hay que alcanzarlo para ganar su bonus. Los proyectiles del jefe apuntan a la posición del personaje al disparar, también cuando está en el suelo, y se pueden esquivar moviéndose o saltando.
+Conan corre cuando te acercás: hay que alcanzarlo para ganar su bonus. Cristina dispara de a un proyectil más lento y espaciado, dirigido a la posición del personaje al disparar, también cuando está en el suelo; se puede esquivar moviéndose o saltando.
 
 Cada nivel tiene una introducción narrativa antes de empezar y un cierre al llegar a la meta. Tras derrotar a Cristina, su sprite queda detrás de rejas como parte de la ficción satírica del juego. El botón GUARDAR PUNTAJE del cierre abre el formulario de alias y el ranking.
 

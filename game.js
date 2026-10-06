@@ -407,8 +407,9 @@
     }
   }
 
-  function message(text, seconds = 2) {
+  function message(text, seconds = 2, kind = 'normal') {
     ui.message.textContent = text;
+    ui.message.classList.toggle('enemy-intro', kind === 'enemy');
     ui.message.classList.add('show');
     noticeTime = seconds;
   }
@@ -440,7 +441,7 @@
     particles = [];
     effects = [];
     encountered = new Set();
-    boss = { x: 1615, y: 168, w: 35, h: 60, hp: index === 0 ? 14 : 18, maxHp: index === 0 ? 14 : 18, shotCd: 1.5, invulnerable: 0, alive: true, jailed: false };
+    boss = { x: 1615, y: 168, w: 35, h: 60, hp: index === 0 ? 14 : 18, maxHp: index === 0 ? 14 : 18, shotCd: index === 0 ? 2.25 : 1.5, invulnerable: 0, alive: true, jailed: false };
     for (const { audio: track } of musicTracks) {
       track.pause();
       track.volume = 0;
@@ -863,7 +864,7 @@
       if (!encountered.has(enemy.type) && enemy.x > player.x && enemy.x - player.x < 105) {
         encountered.add(enemy.type);
         const introductions = { piquetero: 'APARECEN LOS PIQUETEROS', noqui: 'CUIDADO CON LOS ÑOQUIS', bill: 'SE DISPARA LA INFLACIÓN' };
-        message(introductions[enemy.type], 3.2);
+        message(introductions[enemy.type], 2.6, 'enemy');
       }
       enemy.phase += dt;
       if (enemy.type === 'bill') {
@@ -887,13 +888,14 @@
       boss.y = 167 + Math.sin(elapsed * 1.9) * 8;
       boss.shotCd -= dt;
       if (boss.shotCd <= 0 && Math.abs(player.x - boss.x) < 420) {
-        boss.shotCd = boss.hp < 7 ? .95 : 1.5;
+        boss.shotCd = levelIndex === 0 ? (boss.hp < 7 ? 1.65 : 2.25) : (boss.hp < 7 ? .95 : 1.5);
         const launchX = boss.x - 6;
         const launchY = boss.y + 25;
-        const flightTime = Math.max(.28, (launchX - player.x - player.w / 2) / 165);
-        for (const spread of [-14, 0, 14]) {
+        const shotSpeed = levelIndex === 0 ? 135 : 165;
+        const flightTime = Math.max(.28, (launchX - player.x - player.w / 2) / shotSpeed);
+        for (const spread of levelIndex === 0 ? [0] : [-14, 0, 14]) {
           const targetY = player.y + player.h * .6 + spread;
-          shots.push({ x: launchX, y: launchY, w: 8, h: 7, vx: -165, vy: (targetY - launchY) / flightTime, friendly: false, color: '#f18d5d', life: 3 });
+          shots.push({ x: launchX, y: launchY, w: 8, h: 7, vx: -shotSpeed, vy: (targetY - launchY) / flightTime, friendly: false, color: '#f18d5d', life: 3 });
         }
         playSfx('bossShot');
       }
@@ -1061,8 +1063,8 @@
       ctx.restore();
     }
     if (levelIndex === 0) {
-      for (const worldX of [105, 385, 765, 1035, 1320, 1460, 1750]) {
-        const x = worldX - cam * .95;
+      for (const worldX of [105, 385, 500, 940, 1040, 1410, 1740]) {
+        const x = worldX - cam * .9;
         if (x < -32 || x > W + 32) continue;
         rect(x - 2, 194, 5, 37, '#6b5040');
         for (const [dx, dy, radius] of [[0, 182, 16], [-12, 188, 11], [12, 187, 12]]) {
