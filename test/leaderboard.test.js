@@ -96,3 +96,31 @@ test('accepts Vercel Marketplace KV environment variable names', async () => {
     process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
   }
 });
+
+test('loads global and historical rankings concurrently', async () => {
+  const originalFetch = global.fetch;
+  const keys = [];
+  let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  global.fetch = async (_url, options) => {
+    keys.push(JSON.parse(options.body)[1]);
+    await gate;
+    return { ok: true, json: async () => ({ result: [] }) };
+  };
+  try {
+    const listed = response();
+    const pending = handler({ method: 'GET' }, listed);
+    await new Promise(resolve => setImmediate(resolve));
+    assert.deepEqual(keys, [
+      'super-milei-bros:global:ranking-v1',
+      'super-milei-bros:level-1:ranking-v1',
+      'super-milei-bros:level-2:ranking-v1',
+    ]);
+    release();
+    await pending;
+    assert.equal(listed.statusCode, 200);
+  } finally {
+    release();
+    global.fetch = originalFetch;
+  }
+});

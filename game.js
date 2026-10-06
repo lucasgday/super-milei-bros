@@ -770,13 +770,16 @@
     playSfx(win ? 'victory' : 'defeat');
   }
 
+  let rankingRequest;
   async function loadRanking() {
     ui.rankingTitle.textContent = 'RANKING GLOBAL';
     ui.rankingStatus.textContent = 'Cargando ranking…';
     try {
-      const response = await fetch('/api/leaderboard');
-      if (!response.ok) throw new Error();
-      const { ranking } = await response.json();
+      rankingRequest ||= fetch('/api/leaderboard').then(response => {
+        if (!response.ok) throw new Error();
+        return response.json();
+      }).finally(() => { rankingRequest = null; });
+      const { ranking } = await rankingRequest;
       ui.rankingPreview.textContent = ranking.length
         ? `TOP 3 · ${ranking.slice(0, 3).map(({ alias, score: points }, index) => `${index + 1}. ${alias} ${Number(points).toLocaleString('es-AR')}`).join('  ·  ')}`
         : 'TOP 3 · TODAVÍA SIN PUNTAJES';

@@ -29,9 +29,13 @@ module.exports = async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
+      const sources = [[rankingKey, null], [legacyKeyFor(1), 1], [legacyKeyFor(2), 2]];
+      const results = await Promise.all(sources.map(async ([key, level]) => ({
+        level,
+        rows: await redis(['ZREVRANGE', key, 0, 9, 'WITHSCORES']),
+      })));
       const ranking = [];
-      for (const [key, level] of [[rankingKey, null], [legacyKeyFor(1), 1], [legacyKeyFor(2), 2]]) {
-        const rows = await redis(['ZREVRANGE', key, 0, 9, 'WITHSCORES']);
+      for (const { level, rows } of results) {
         for (let i = 0; i < rows.length; i += 2) {
           const entry = JSON.parse(rows[i]);
           ranking.push({ alias: entry.alias, score: Number(rows[i + 1]), level: entry.level || level });

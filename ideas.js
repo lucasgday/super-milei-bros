@@ -82,9 +82,9 @@
       paymentEnabled = data.paymentEnabled;
       paymentMode = data.paymentMode || 'off';
       intro.textContent = paymentMode === 'test'
-        ? 'MODO DE PRUEBA: el checkout usa credenciales de test. No se cobra dinero ni se suman votos reales. Las propuestas nuevas se revisan antes de publicarse.'
+        ? 'MODO DE PRUEBA: no se cobra dinero ni se suman votos reales. Cuando se activen, los aportes de ARS 1.000 por voto ayudarán a costear el desarrollo del juego. Las propuestas nuevas se revisan antes de publicarse.'
         : paymentEnabled
-        ? 'Apoyá las ideas que querés ver en el juego. Cada voto cuesta ARS 1.000 y se cuenta sólo cuando Mercado Pago confirma el pago. Las propuestas nuevas se revisan antes de publicarse.'
+        ? 'Apoyá las ideas que querés ver en el juego. Cada voto cuesta ARS 1.000; lo recaudado ayuda a costear el desarrollo. El voto se cuenta sólo cuando Mercado Pago confirma el pago. Las propuestas nuevas se revisan antes de publicarse.'
         : 'Elegí qué ideas te gustaría ver en el juego. Las propuestas nuevas se revisan antes de publicarse.';
       form.hidden = !available;
       status.textContent = paymentEnabled ? '' : available ? 'Los votos pagos estarán disponibles pronto.' : 'Votos y envíos disponibles en la versión online.';
