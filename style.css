@@ -208,10 +208,11 @@ footer a:hover{text-decoration:underline;color:#ffe296}
   .hud{top:env(safe-area-inset-top);padding:6px max(10px,env(safe-area-inset-right)) 16px max(10px,env(safe-area-inset-left))}
 }
 .social-actions{flex-wrap:wrap}
-.ideas-panel{position:absolute;z-index:6;inset:5%;overflow:auto;padding:16px 22px;background:#102434f7;border:2px solid #78aeb1;box-shadow:0 12px 35px #0009;text-align:left;color:#fff}
+.ideas-panel{margin:28px 0 0;padding:22px 0 28px;border-top:1px solid #638b91;border-bottom:1px solid #344653;text-align:left;color:#fff}
 .ideas-panel[hidden],#ideaForm[hidden]{display:none}
-.overlay:has(.ideas-panel:not([hidden])){z-index:8}
-.ideas-panel .ranking-head{position:sticky;top:0;z-index:1;background:#102434}
+.ideas-panel .ranking-head{max-width:900px}
+.ideas-panel #ideasClose{display:none}
+.ideas-list,#ideaForm{max-width:900px}
 .ideas-panel button{min-height:36px;padding:7px 12px;border:1px solid #90c6c0;border-radius:3px;background:#163947;color:#f3f7e8;font:700 12px 'Space Grotesk',Arial,sans-serif}
 .ideas-panel button:hover:not(:disabled){background:#256070}
 .ideas-panel button:disabled{opacity:.62;cursor:default}
@@ -228,4 +229,39 @@ footer a:hover{text-decoration:underline;color:#ffe296}
 #ideaForm label{font-size:11px;font-weight:700;color:#a7d7d0}
 #ideaForm input,#ideaForm textarea{width:100%;min-height:36px;padding:8px 9px;border:1px solid #86b8b8;border-radius:3px;background:#f5f7ef;color:#102434;font:600 14px 'Space Grotesk',Arial,sans-serif}
 #ideaForm textarea{resize:vertical}
-@media(max-width:780px){.ideas-panel{inset:4%;padding:10px 12px}.ideas-intro{font-size:11px!important}.idea-row{gap:8px}.idea-row h3{font-size:12px}.idea-row p{font-size:10px}.idea-row .idea-vote{min-width:82px;padding:6px;font-size:10px}#ideaForm{grid-template-columns:1fr}#ideaForm input,#ideaForm button{grid-column:1/-1}}
+@media(max-width:780px), (hover:none) and (pointer:coarse){
+  .ideas-panel{position:fixed;z-index:20;inset:0;overflow:auto;margin:0;padding:calc(16px + env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));border:0;background:#102434;color:#fff}
+  .ideas-panel #ideasClose{display:block}
+  .ideas-panel .ranking-head{position:sticky;top:0;z-index:1;background:#102434}
+  .ideas-intro{font-size:12px!important}
+  .idea-row{gap:8px}
+  .idea-row h3{font-size:13px}
+  .idea-row p{font-size:11px}
+  .idea-row .idea-vote{min-width:82px;padding:6px;font-size:10px}
+  #ideaForm{grid-template-columns:1fr}
+  #ideaForm input,#ideaForm button{grid-column:1/-1}
+}
+.decision-panel{position:absolute;z-index:9;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;overflow:auto;padding:24px 32px;background:#091523f4;color:#f3eee0;text-align:center}
+.decision-panel[hidden]{display:none}
+.decision-panel .eyebrow{margin:0;color:#f2c278}
+.decision-panel h2{margin:0;color:#ffe2a4;font:700 26px/1.15 'Space Grotesk',Arial,sans-serif}
+.decision-panel>p:not(.eyebrow){max-width:660px;margin:0;font-size:15px;line-height:1.45}
+.decision-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:min(680px,100%)}
+.decision-choices button{min-height:78px;padding:12px 15px;border:2px solid #86abae;border-radius:3px;background:#183849;color:#f3eee0;text-align:left}
+.decision-choices button:hover,.decision-choices button:focus-visible{background:#255568;border-color:#f2ce8e}
+.decision-choices strong,.decision-choices small{display:block}
+.decision-choices strong{color:#ffe2a4;font-size:14px}
+.decision-choices small{margin-top:5px;color:#c5d9d8;font-size:12px;line-height:1.35}
+.decision-sources{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 20px}
+.decision-sources a{color:#9ed9d4;font-size:11px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:780px), (hover:none) and (pointer:coarse){
+  .decision-panel{gap:8px;padding:48px 18px 14px}
+  .decision-panel h2{font-size:19px}
+  .decision-panel>p:not(.eyebrow){font-size:12px;line-height:1.35}
+  .decision-choices{gap:8px}
+  .decision-choices button{min-height:66px;padding:8px 10px}
+  .decision-choices strong{font-size:11px}
+  .decision-choices small{font-size:10px}
+  .decision-sources a{font-size:10px}
+}
+@media(max-width:520px) and (orientation:portrait){.decision-choices{grid-template-columns:1fr}}

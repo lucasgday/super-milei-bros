@@ -34,8 +34,10 @@ module.exports = async function handler(req, res) {
     if (req.method === 'GET') {
       if (!available) return res.status(200).json({ ideas: ideas.map(idea => ({ ...idea, votes: 0, voted: false })), available: false });
       const digest = visitorDigest(req);
-      const counts = await redis(['HMGET', votesKey, ...ideas.map(idea => idea.id)]);
-      const voted = await redis(['MGET', ...ideas.map(idea => `super-milei-bros:ideas:voter:${idea.id}:${digest}`)]);
+      const [counts, voted] = await Promise.all([
+        redis(['HMGET', votesKey, ...ideas.map(idea => idea.id)]),
+        redis(['MGET', ...ideas.map(idea => `super-milei-bros:ideas:voter:${idea.id}:${digest}`)]),
+      ]);
       return res.status(200).json({
         ideas: ideas.map((idea, index) => ({ ...idea, votes: Number(counts[index] || 0), voted: Boolean(voted[index]) })),
         available: true,

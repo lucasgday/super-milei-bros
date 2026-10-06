@@ -8,8 +8,21 @@
   const status = document.getElementById('ideasStatus');
   const form = document.getElementById('ideaForm');
   const rankingPanel = document.getElementById('rankingPanel');
+  const mobileLayout = window.matchMedia('(max-width: 780px), (hover: none) and (pointer: coarse)');
   let ideas = [];
   let available = false;
+  let loading = false;
+
+  function syncLayout() {
+    panel.hidden = mobileLayout.matches;
+    if (mobileLayout.matches) {
+      panel.setAttribute('role', 'dialog');
+      panel.setAttribute('aria-modal', 'true');
+    } else {
+      panel.removeAttribute('role');
+      panel.removeAttribute('aria-modal');
+    }
+  }
 
   function close() {
     if (panel.hidden) return;
@@ -41,29 +54,35 @@
   }
 
   async function load() {
-    status.textContent = 'Cargando propuestas…';
-    try {
-      const response = await fetch('/api/ideas');
+    if (loading) return;
+    loading = true;
+    const live = fetch('/api/ideas').then(async response => {
       if (!response.ok) throw new Error();
-      const data = await response.json();
+      return response.json();
+    }).catch(() => null);
+    try {
+      const response = await fetch('./ideas.json', { cache: 'no-store' });
+      if (!response.ok) throw new Error();
+      ideas = (await response.json()).map(idea => ({ ...idea, votes: 0, voted: false }));
+      status.textContent = 'Actualizando votos…';
+      render();
+    } catch {
+      status.textContent = 'Actualizando propuestas…';
+    }
+    const data = await live;
+    if (data) {
       ideas = data.ideas;
       available = data.available;
       form.hidden = !available;
       status.textContent = available ? '' : 'Votos y envíos disponibles en la versión online.';
       render();
-    } catch {
-      try {
-        const response = await fetch('./ideas.json');
-        if (!response.ok) throw new Error();
-        ideas = (await response.json()).map(idea => ({ ...idea, votes: 0, voted: false }));
-        available = false;
-        form.hidden = true;
-        status.textContent = 'Votos y envíos no disponibles en este momento.';
-        render();
-      } catch {
-        status.textContent = 'No pudimos cargar las propuestas. Probá de nuevo más tarde.';
-      }
+    } else {
+      available = false;
+      form.hidden = true;
+      status.textContent = ideas.length ? 'Votos y envíos no disponibles en este momento.' : 'No pudimos cargar las propuestas. Probá de nuevo más tarde.';
+      render();
     }
+    loading = false;
   }
 
   async function submitVote(idea, vote) {
@@ -88,17 +107,20 @@
   }
 
   button.addEventListener('click', () => {
-    panel.hidden = !panel.hidden;
-    if (!panel.hidden) {
-      rankingPanel.hidden = true;
-      closeButton.focus();
-      load();
+    rankingPanel.hidden = true;
+    if (!mobileLayout.matches) {
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      panel.focus({ preventScroll: true });
+      return;
     }
+    panel.hidden = false;
+    closeButton.focus();
   });
   closeButton.addEventListener('click', close);
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape' && !panel.hidden) close();
-    if (event.key !== 'Tab' || panel.hidden) return;
+    if (!mobileLayout.matches || panel.hidden) return;
+    if (event.key === 'Escape') { close(); return; }
+    if (event.key !== 'Tab') return;
     const focusable = [...panel.querySelectorAll('button:not(:disabled), input, textarea')].filter(element => !element.closest('[hidden]'));
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
@@ -131,4 +153,7 @@
       submit.disabled = false;
     }
   });
+  mobileLayout.addEventListener('change', syncLayout);
+  syncLayout();
+  load();
 })();

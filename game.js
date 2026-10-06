@@ -41,6 +41,7 @@
     playerAlias: document.getElementById('playerAlias'),
     shareButton: document.getElementById('shareButton'),
     shareStatus: document.getElementById('shareStatus'),
+    decisionPanel: document.getElementById('decisionPanel'),
   };
   const sprites = {
     heroes: new Image(),
@@ -192,6 +193,7 @@
   let lastLaughAt = -Infinity;
   let lastFrame = performance.now();
   let scoreSubmitted = false;
+  let decisionShown = false;
   try { unlockedPatricia = localStorage.getItem('smb-patricia-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
   try { unlockedLevel2 = localStorage.getItem('smb-level2-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
   ui.level2Start.hidden = !unlockedLevel2;
@@ -461,6 +463,8 @@
     heroLabelUntil = 2.5;
     bossLabelUntil = 0;
     bossIntroduced = false;
+    decisionShown = false;
+    ui.decisionPanel.hidden = true;
     syncUi();
     message(`NIVEL 1-${index + 1}: ${data.name}`, 2.1);
   }
@@ -468,7 +472,7 @@
   function begin(index = 0) {
     closeRotatePrompt();
     ui.rankingPanel.hidden = true;
-    document.getElementById('ideasPanel').hidden = true;
+    if (window.matchMedia('(max-width: 780px), (hover: none) and (pointer: coarse)').matches) document.getElementById('ideasPanel').hidden = true;
     ui.shareStatus.textContent = '';
     if (!(index === 1 && levelIndex === 0 && state === 'won')) score = 0;
     lives = 3;
@@ -564,7 +568,7 @@
     scoreSubmitted = false;
     ui.scoreForm.hidden = false;
     ui.rankingPanel.hidden = true;
-    document.getElementById('ideasPanel').hidden = true;
+    if (window.matchMedia('(max-width: 780px), (hover: none) and (pointer: coarse)').matches) document.getElementById('ideasPanel').hidden = true;
     ui.rankingButton.textContent = '🏆 GUARDAR PUNTAJE';
     ui.rankingStatus.textContent = 'Guardá tu puntaje para aparecer en el ranking.';
     loadRanking();
@@ -648,6 +652,32 @@
     message('¡CUIDADO! UNA VIDA MENOS', 1.3);
   }
 
+  function showDecision() {
+    decisionShown = true;
+    held.clear();
+    setState('decision');
+    ui.decisionPanel.hidden = false;
+    ui.decisionPanel.querySelector('button').focus();
+    syncMusic();
+  }
+
+  function chooseDecision(choice) {
+    const hazards = choice === 'keep'
+      ? [['reporter', 1040, 208], ['envelope', 1140, 138], ['reporter', 1265, 208], ['envelope', 1330, 129]]
+      : [['criticism', 1090, 138], ['criticism', 1270, 126]];
+    for (const [type, x, y] of hazards) {
+      enemies.push({ type, x, y, w: type === 'reporter' ? 18 : 21, h: type === 'reporter' ? 22 : 16,
+        startX: x, startY: y, direction: -1, hp: 2, alive: true, phase: Math.random() * 6 });
+      encountered.add(type);
+    }
+    ui.decisionPanel.hidden = true;
+    setState('playing');
+    canvas.focus();
+    message(choice === 'keep' ? 'ADORNI SIGUE · PRENSA Y SOBRES EN EL CAMINO' : 'ADORNI RENUNCIA · LLEGAN CRÍTICAS DE ALIADOS', 3, 'enemy');
+    playSfx('switch');
+    syncMusic();
+  }
+
   function spawnParticles(x, y, color, amount = 7) {
     for (let i = 0; i < amount; i++) {
       particles.push({ x, y, vx: (Math.random() - .5) * 95, vy: (Math.random() - .7) * 95, life: .45 + Math.random() * .3, color });
@@ -722,7 +752,7 @@
     effect('hit', enemy.x + enemy.w / 2, enemy.y + 9, 1, .22);
     if (enemy.hp <= 0) {
       enemy.alive = false;
-      score += enemy.type === 'bill' ? 180 : 120;
+      score += enemy.type === 'reporter' || enemy.type === 'envelope' ? 200 : enemy.type === 'bill' ? 180 : 120;
       maybeLaugh();
       syncUi();
     }
@@ -826,6 +856,10 @@
     companion.stride += Math.abs(companion.x - companionX) / 14;
     companion.y += (player.y - companion.y) * Math.min(1, dt * 9);
     cam = clamp(player.x - W * .32, 0, Math.max(0, WORLD - W));
+    if (levelIndex === 0 && !decisionShown && player.x >= 950 && player.grounded) {
+      showDecision();
+      return;
+    }
     syncMusic(dt);
 
     for (const coin of coins) {
@@ -864,20 +898,20 @@
       if (!enemy.alive) continue;
       if (!encountered.has(enemy.type) && enemy.x > player.x && enemy.x - player.x < 105) {
         encountered.add(enemy.type);
-        const introductions = { piquetero: 'APARECEN LOS PIQUETEROS', noqui: 'CUIDADO CON LOS ÑOQUIS', bill: 'SE DISPARA LA INFLACIÓN' };
+        const introductions = { piquetero: 'APARECEN LOS PIQUETEROS', noqui: 'CUIDADO CON LOS ÑOQUIS', bill: 'SE DISPARA LA INFLACIÓN', reporter: 'LLEGA LA PRENSA', envelope: 'CAEN SOBRES', criticism: 'CRÍTICAS DE ALIADOS' };
         message(introductions[enemy.type], 2.6, 'enemy');
       }
       enemy.phase += dt;
-      if (enemy.type === 'bill') {
+      if (enemy.type === 'bill' || enemy.type === 'envelope' || enemy.type === 'criticism') {
         enemy.x = enemy.startX + Math.sin(enemy.phase * 1.6) * 24;
         enemy.y = enemy.startY + Math.sin(enemy.phase * 2.1) * 9;
       } else {
         enemy.x += enemy.direction * (enemy.type === 'noqui' ? 43 : 28) * dt;
         if (Math.abs(enemy.x - enemy.startX) > 42) enemy.direction *= -1;
-        if (enemy.type === 'noqui') enemy.y = enemy.startY - Math.abs(Math.sin(enemy.phase * 2.2)) * 19;
+        if (enemy.type === 'noqui' || enemy.type === 'reporter') enemy.y = enemy.startY - Math.abs(Math.sin(enemy.phase * 2.2)) * (enemy.type === 'reporter' ? 2 : 19);
       }
       if (overlap(player, enemy)) {
-        if (oldBottom <= enemy.y + 7 && player.vy > 0 && enemy.type !== 'bill') {
+        if (oldBottom <= enemy.y + 7 && player.vy > 0 && !['bill', 'envelope', 'criticism'].includes(enemy.type)) {
           damageEnemy(enemy, 3);
           player.vy = -190;
           playSfx('stomp');
@@ -1197,6 +1231,29 @@
     if (!enemy.alive) return;
     const x = Math.round(enemy.x - cam);
     const y = Math.round(enemy.y);
+    if (enemy.type === 'reporter') {
+      rect(x + 3, y + 9, 12, 12, '#526e85');
+      rect(x + 6, y + 2, 8, 9, '#eac6a2');
+      rect(x + 5, y, 10, 4, '#39404c');
+      rect(x - 2, y + 10, 8, 6, '#a7b8ba');
+      rect(x - 5, y + 12, 5, 2, '#364d5b');
+      rect(x + 5, y + 21, 4, 3, '#26313a');
+      rect(x + 12, y + 21, 4, 3, '#26313a');
+      return;
+    }
+    if (enemy.type === 'envelope') {
+      rect(x, y + 2, 21, 13, '#f2e4c1');
+      rect(x + 2, y + 4, 17, 2, '#c58669');
+      rect(x + 4, y + 7, 13, 2, '#c58669');
+      rect(x + 7, y + 10, 7, 3, '#b96358');
+      return;
+    }
+    if (enemy.type === 'criticism') {
+      rect(x, y, 21, 13, '#f6d38d');
+      rect(x + 5, y + 13, 4, 3, '#f6d38d');
+      text('!', x + 11, y + 11, '#573c39', 11, 'center');
+      return;
+    }
     if (enemy.type === 'piquetero' && sprites.crowd.complete && sprites.crowd.naturalWidth) {
       ctx.save();
       ctx.imageSmoothingEnabled = true;
@@ -1399,6 +1456,17 @@
 
   const keyMap = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'Space', 'KeyA', 'KeyD', 'KeyW', 'KeyJ', 'KeyK', 'KeyQ', 'KeyP', 'Enter']);
   window.addEventListener('keydown', event => {
+    if (state === 'decision') {
+      if (event.key === 'Tab') {
+        const focusable = [...ui.decisionPanel.querySelectorAll('button, a')];
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }
+      return;
+    }
+    if (event.target instanceof Element && event.target.closest('#ideasPanel, #scoreForm')) return;
     if (!ui.rotate.hidden && event.code === 'Escape') {
       closeRotatePrompt();
       ui.play.focus();
@@ -1537,9 +1605,12 @@
     else showIntro(state === 'won' && levelIndex < levelData.length - 1 ? levelIndex + 1 : levelIndex);
   });
   ui.level2Start.addEventListener('click', () => showIntro(1));
+  ui.decisionPanel.querySelectorAll('[data-decision]').forEach(button => {
+    button.addEventListener('click', () => chooseDecision(button.dataset.decision));
+  });
   ui.rankingButton.addEventListener('click', () => {
     ui.rankingPanel.hidden = !ui.rankingPanel.hidden;
-    if (!ui.rankingPanel.hidden) document.getElementById('ideasPanel').hidden = true;
+    if (!ui.rankingPanel.hidden && window.matchMedia('(max-width: 780px), (hover: none) and (pointer: coarse)').matches) document.getElementById('ideasPanel').hidden = true;
     if (!ui.rankingPanel.hidden) loadRanking();
   });
   ui.rankingClose.addEventListener('click', () => { ui.rankingPanel.hidden = true; });

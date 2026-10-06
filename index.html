@@ -32,7 +32,7 @@
         <div><span class="hud-label">NIVEL</span><strong id="levelName">1-1</strong></div>
         <div><span class="hud-label">PUNTOS</span><strong id="score">000000</strong></div>
       </div>
-      <canvas id="game" width="960" height="540" aria-label="Plataformas lateral con Javier, Karina y Patricia. En móvil, usá los controles transparentes sobre el escenario para moverte, saltar, atacar, usar la habilidad y cambiar de personaje."></canvas>
+      <canvas id="game" width="960" height="540" tabindex="-1" aria-label="Plataformas lateral con Javier, Karina y Patricia. En móvil, usá los controles transparentes sobre el escenario para moverte, saltar, atacar, usar la habilidad y cambiar de personaje."></canvas>
       <div class="message" id="message" aria-live="polite"></div>
       <div class="overlay" id="overlay">
         <div class="overlay-art" aria-hidden="true">
@@ -65,20 +65,6 @@
           <p id="rankingStatus" role="status" aria-live="polite"></p>
           <ol id="rankingList"></ol>
         </div>
-        <div class="ideas-panel" id="ideasPanel" role="dialog" aria-modal="true" aria-labelledby="ideasTitle" hidden>
-          <div class="ranking-head"><strong id="ideasTitle">IDEAS PARA EL JUEGO</strong><button id="ideasClose" type="button" aria-label="Cerrar ideas">×</button></div>
-          <p class="ideas-intro">Votá qué debería llegar después. Los votos orientan el desarrollo; las propuestas nuevas se revisan antes de publicarse.</p>
-          <p id="ideasStatus" role="status" aria-live="polite"></p>
-          <div id="ideasList" class="ideas-list"></div>
-          <form id="ideaForm" autocomplete="off" hidden>
-            <strong>PROPONÉ UNA IDEA</strong>
-            <label for="ideaTitle">Título</label>
-            <input id="ideaTitle" name="title" type="text" minlength="6" maxlength="80" required placeholder="Ej.: un nuevo personaje">
-            <label for="ideaDescription">¿Cómo sería en el juego?</label>
-            <textarea id="ideaDescription" name="description" minlength="20" maxlength="500" rows="3" required placeholder="Contá la mecánica, el escenario o el desafío"></textarea>
-            <button type="submit">ENVIAR PROPUESTA</button>
-          </form>
-        </div>
         <p class="share-status" id="shareStatus" role="status" aria-live="polite"></p>
         <p class="fullscreen-help" id="fullscreenHelp" hidden>Para jugar sin la barra del navegador, agregá el juego a la pantalla de inicio.</p>
       </div>
@@ -90,6 +76,31 @@
         <button class="rotate-back" id="rotateBack" type="button">VOLVER</button>
       </div>
       <div class="pause-screen" id="pauseScreen" hidden><strong>PAUSA</strong><button class="primary-button" id="resume" type="button">CONTINUAR <span>▶</span></button></div>
+      <div class="decision-panel" id="decisionPanel" role="dialog" aria-modal="true" aria-labelledby="decisionTitle" aria-describedby="decisionBody" hidden>
+        <p class="eyebrow">DECISIÓN · FICCIÓN SATÍRICA</p>
+        <h2 id="decisionTitle">CRISIS DE GABINETE</h2>
+        <p id="decisionBody">Investigan reformas en la casa de Adorni. El contratista declaró US$245.000, incluida una cascada de US$3.500; la defensa sostiene US$175.000. La Justicia aún investiga.</p>
+        <div class="decision-choices">
+          <button type="button" data-decision="keep"><strong>SOSTENERLO</strong><small>Más periodistas y sobres en el camino. Más puntos por superarlos.</small></button>
+          <button type="button" data-decision="dismiss"><strong>PEDIRLE LA RENUNCIA</strong><small>Críticas de aliados en el camino. Ruta menos difícil.</small></button>
+        </div>
+        <div class="decision-sources"><a href="https://www.infobae.com/judiciales/2026/05/05/asi-es-la-cascada-que-manuel-adorni-ordeno-construir-en-la-pileta-de-su-casa-del-country-indio-cua/" target="_blank" rel="noopener noreferrer">OBRAS ↗</a><a href="https://www.infobae.com/judiciales/2026/09/23/la-justicia-estudia-las-billeteras-virtuales-de-adorni-investigaran-la-trazabilidad-de-los-bitcoins/" target="_blank" rel="noopener noreferrer">DESCARGO Y CAUSA ↗</a></div>
+      </div>
+    </section>
+
+    <section class="ideas-panel" id="ideasPanel" aria-labelledby="ideasTitle" tabindex="-1">
+      <div class="ranking-head"><strong id="ideasTitle">IDEAS PARA EL JUEGO</strong><button id="ideasClose" type="button" aria-label="Cerrar ideas">×</button></div>
+      <p class="ideas-intro">Votá qué debería llegar después. Los votos orientan el desarrollo; las propuestas nuevas se revisan antes de publicarse.</p>
+      <p id="ideasStatus" role="status" aria-live="polite"></p>
+      <div id="ideasList" class="ideas-list"></div>
+      <form id="ideaForm" autocomplete="off" hidden>
+        <strong>PROPONÉ UNA IDEA</strong>
+        <label for="ideaTitle">Título</label>
+        <input id="ideaTitle" name="title" type="text" minlength="6" maxlength="80" required placeholder="Ej.: un nuevo personaje">
+        <label for="ideaDescription">¿Cómo sería en el juego?</label>
+        <textarea id="ideaDescription" name="description" minlength="20" maxlength="500" rows="3" required placeholder="Contá la mecánica, el escenario o el desafío"></textarea>
+        <button type="submit">ENVIAR PROPUESTA</button>
+      </form>
     </section>
 
     <nav class="mobile-controls" aria-label="Controles del juego">
