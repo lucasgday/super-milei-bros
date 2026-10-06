@@ -1,12 +1,14 @@
 const crypto = require('node:crypto');
 
-const KEY = 'super-milei-bros:level-1:ranking-v1';
+const keyFor = level => `super-milei-bros:level-${level}:ranking-v1`;
+const redisUrl = () => process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+const redisToken = () => process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 
 async function redis(command) {
-  const response = await fetch(process.env.UPSTASH_REDIS_REST_URL, {
+  const response = await fetch(redisUrl(), {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
+      Authorization: `Bearer ${redisToken()}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(command),
@@ -19,13 +21,15 @@ async function redis(command) {
 
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+  if (!redisUrl() || !redisToken()) {
     return res.status(503).json({ error: 'Ranking no configurado' });
   }
 
   try {
     if (req.method === 'GET') {
-      const rows = await redis(['ZREVRANGE', KEY, 0, 9, 'WITHSCORES']);
+      const level = Number(req.query?.level || 1);
+      if (level !== 1 && level !== 2) return res.status(400).json({ error: 'Nivel inválido' });
+      const rows = await redis(['ZREVRANGE', keyFor(level), 0, 9, 'WITHSCORES']);
       const ranking = [];
       for (let i = 0; i < rows.length; i += 2) {
         const entry = JSON.parse(rows[i]);
@@ -39,20 +43,20 @@ module.exports = async function handler(req, res) {
       return res.status(405).json({ error: 'Método no permitido' });
     }
 
-    const { alias, score } = req.body || {};
+    const { alias, score, level = 1 } = req.body || {};
     const name = typeof alias === 'string' ? alias.trim().replace(/\s+/g, ' ') : '';
-    if (!/^[\p{L}\p{N} _-]{2,18}$/u.test(name) || !Number.isInteger(score) || score < 500 || score > 10000) {
+    if (!/^[\p{L}\p{N} _-]{2,18}$/u.test(name) || !Number.isInteger(score) || score < 0 || score > 10000 || (level !== 1 && level !== 2)) {
       return res.status(400).json({ error: 'Alias o puntaje inválido' });
     }
 
     const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0];
-    const digest = crypto.createHmac('sha256', process.env.UPSTASH_REDIS_REST_TOKEN).update(ip).digest('hex');
+    const digest = crypto.createHmac('sha256', redisToken()).update(ip).digest('hex');
     const rateKey = `super-milei-bros:submissions:${digest}`;
     const count = Number(await redis(['INCR', rateKey]));
     if (count === 1) await redis(['EXPIRE', rateKey, 3600]);
     if (count > 5) return res.status(429).json({ error: 'Demasiados intentos. Probá más tarde.' });
 
-    await redis(['ZADD', KEY, score, JSON.stringify({ alias: name, id: crypto.randomUUID() })]);
+    await redis(['ZADD', keyFor(level), score, JSON.stringify({ alias: name, id: crypto.randomUUID() })]);
     return res.status(201).json({ ok: true });
   } catch {
     return res.status(503).json({ error: 'El ranking no está disponible ahora.' });

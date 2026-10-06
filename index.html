@@ -42,12 +42,13 @@
         <h1 id="overlayTitle">SUPER <em>MILEI</em> BROS</h1>
         <p id="overlayBody">Javier y Karina recorren una Argentina de caricatura. Una aventura independiente y no oficial, hecha con humor político.</p>
         <button class="primary-button" id="play" type="button">JUGAR <span>▶</span></button>
+        <button class="level2-start" id="level2Start" type="button" hidden>IR AL NIVEL 1-2 <span>▶</span></button>
         <div class="social-actions">
           <button id="rankingButton" type="button">🏆 RANKING</button>
           <button id="shareButton" type="button">↗ COMPARTIR</button>
         </div>
         <div class="ranking-panel" id="rankingPanel" hidden>
-          <div class="ranking-head"><strong>RANKING · NIVEL 1-1</strong><button id="rankingClose" type="button" aria-label="Cerrar ranking">×</button></div>
+          <div class="ranking-head"><strong id="rankingTitle">RANKING · NIVEL 1-1</strong><button id="rankingClose" type="button" aria-label="Cerrar ranking">×</button></div>
           <form id="scoreForm" hidden>
             <label for="playerAlias">TU ALIAS</label>
             <input id="playerAlias" name="alias" type="text" maxlength="18" autocomplete="nickname" required placeholder="Tu nombre en el ranking">
@@ -86,10 +87,10 @@
 
     <section class="below">
       <div class="level-list">
-        <div class="section-label">MUNDO 01 <span>///</span> BUENOS AIRES</div>
+        <div class="section-label">MUNDO 01 <span>///</span> ARGENTINA</div>
         <div class="level-cards">
-          <div class="level-card active"><span>01</span><strong>La avenida</strong><small>Un recorrido corto y un boss intermedio</small></div>
-          <div class="level-card"><span>02</span><strong>La economía</strong><small>Próximamente</small></div>
+          <div class="level-card active"><span>01</span><strong>La avenida</strong><small>Cristina, jefa intermedia</small></div>
+          <div class="level-card"><span>02</span><strong>La economía</strong><small>Córdoba · enfrentá a la inflación</small></div>
           <div class="level-card"><span>03</span><strong>La casta</strong><small>Próximamente</small></div>
         </div>
         <div class="roster"><span>PERSONAJES</span><strong>JAVIER · KARINA</strong><small id="rosterUnlock">PATRICIA 🔒</small></div>

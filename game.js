@@ -11,6 +11,7 @@
     title: document.getElementById('overlayTitle'),
     body: document.getElementById('overlayBody'),
     play: document.getElementById('play'),
+    level2Start: document.getElementById('level2Start'),
     rotate: document.getElementById('rotatePrompt'),
     playPortrait: document.getElementById('playPortrait'),
     rotateBack: document.getElementById('rotateBack'),
@@ -31,6 +32,7 @@
     rankingPanel: document.getElementById('rankingPanel'),
     rankingClose: document.getElementById('rankingClose'),
     rankingList: document.getElementById('rankingList'),
+    rankingTitle: document.getElementById('rankingTitle'),
     rankingStatus: document.getElementById('rankingStatus'),
     scoreForm: document.getElementById('scoreForm'),
     playerAlias: document.getElementById('playerAlias'),
@@ -69,6 +71,12 @@
   bossTrack.volume = 0;
   const bossMarch = new Audio('./assets/boss-march.mp3');
   bossMarch.volume = 0;
+  const lionRoar = new Audio('./assets/lion-roar.mp3');
+  const javierLaugh = new Audio('./assets/javier-laugh.mp3');
+  lionRoar.preload = 'auto';
+  javierLaugh.preload = 'auto';
+  lionRoar.volume = .95;
+  javierLaugh.volume = .9;
   const musicTracks = [
     { audio: openingTrack, volume: .35 },
     { audio: soundtrack, volume: .34 },
@@ -98,6 +106,7 @@
 
   const levelData = [{
     name: 'BUENOS AIRES · LA AVENIDA', sky: '#72b8c3', far: '#6689a1', near: '#344b69',
+    bossName: 'CRISTINA',
     ground: [[0, 380], [420, 900], [940, 1360], [1400, WORLD]],
     ledges: [[145, 192, 86], [290, 166, 74], [510, 189, 86], [680, 168, 80], [810, 184, 65], [1030, 178, 90], [1210, 158, 82], [1480, 183, 78]],
     enemies: [
@@ -105,10 +114,21 @@
       ['bill', 1080, 126], ['noqui', 1225, 212], ['piquetero', 1470, 208],
     ],
     coins: [[130, 164], [164, 164], [308, 139], [342, 139], [520, 164], [690, 141], [1020, 148], [1052, 148], [1225, 128], [1495, 155]],
+  }, {
+    name: 'CÓRDOBA · LA ECONOMÍA', sky: '#83b7c5', far: '#8ba397', near: '#526c72',
+    bossName: 'INFLACIÓN',
+    ground: [[0, 410], [455, 880], [930, 1380], [1430, WORLD]],
+    ledges: [[165, 187, 78], [300, 164, 82], [525, 178, 90], [690, 151, 75], [805, 188, 62], [1045, 177, 80], [1205, 156, 85], [1480, 178, 86]],
+    enemies: [
+      ['bill', 225, 133], ['noqui', 365, 208], ['bill', 545, 133], ['bill', 735, 116],
+      ['noqui', 955, 208], ['bill', 1100, 130], ['noqui', 1280, 208], ['bill', 1475, 130],
+    ],
+    coins: [[135, 164], [190, 158], [328, 138], [510, 151], [675, 126], [810, 161], [1020, 150], [1190, 127], [1340, 163], [1515, 150]],
   }];
 
   let state = 'menu';
-  let levelIndex = 0;
+  let levelIndex = new URLSearchParams(window.location.search).get('level') === '2' ? 1 : 0;
+  let pendingLevel = 0;
   let score = 0;
   let lives = 3;
   let heroIndex = 0;
@@ -132,6 +152,7 @@
   let abilityCd = 0;
   let conanCollected = false;
   let unlockedPatricia = false;
+  let unlockedLevel2 = false;
   let muted = false;
   let crowdNearby = false;
   let bossMarchStart = null;
@@ -144,6 +165,8 @@
   let lastFrame = performance.now();
   let scoreSubmitted = false;
   try { unlockedPatricia = localStorage.getItem('smb-patricia-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
+  try { unlockedLevel2 = localStorage.getItem('smb-level2-unlocked') === 'yes'; } catch { /* Private browsing can block storage. */ }
+  ui.level2Start.hidden = !unlockedLevel2;
 
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
   const overlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
@@ -192,6 +215,12 @@
 
   function playSfx(kind) {
     if (muted) return;
+    if (kind === 'roar' || kind === 'laugh') {
+      const sample = kind === 'roar' ? lionRoar : javierLaugh;
+      sample.currentTime = 0;
+      sample.play().catch(() => {});
+      return;
+    }
     try {
       audio ||= new (window.AudioContext || window.webkitAudioContext)();
       if (audio.state === 'suspended') audio.resume();
@@ -288,12 +317,6 @@
           noise(.2, .13, 430);
           tone(300, 105, .28, .13, 'sawtooth');
           break;
-        case 'roar':
-          noise(.62, .24, 850);
-          noise(.43, .13, 1700, .08);
-          tone(240, 95, .7, .24, 'sawtooth');
-          tone(490, 190, .56, .12, 'triangle', .04);
-          break;
         case 'shield':
           tone(440, 900, .26, .12, 'sine');
           tone(660, 1320, .25, .07, 'triangle', .04);
@@ -303,12 +326,6 @@
         case 'bossShot':
           tone(370, 105, .23, .13, 'sawtooth');
           noise(.12, .1, 1050);
-          break;
-        case 'laugh':
-          [210, 170, 195].forEach((note, i) => {
-            tone(note, note * .78, .105, .075, 'sawtooth', i * .13);
-            noise(.055, .035, 780, i * .13);
-          });
           break;
         case 'victory':
           [523, 659, 784, 1047].forEach((note, i) => tone(note, note, .23, .11, 'triangle', i * .13));
@@ -342,17 +359,24 @@
       activeTrack = null;
       return;
     }
-    if (activeTrack !== active) {
-      for (const { audio: track } of musicTracks) {
-        if (track !== active) track.pause();
+    activeTrack ||= active;
+    const ducked = elapsed < roarDuckUntil || !javierLaugh.paused || !lionRoar.paused;
+    for (const { audio: track, volume } of musicTracks) {
+      if (track !== activeTrack) {
         track.volume = 0;
+        if (!track.paused) track.pause();
+        continue;
       }
-      activeTrack = active;
+      const target = activeTrack === active ? volume * (ducked ? .24 : 1) : 0;
+      const step = Math.max(0, dt) * .8;
+      track.volume += Math.sign(target - track.volume) * Math.min(Math.abs(target - track.volume), step);
+      if (track.volume > .005 && track.paused) track.play().catch(() => {});
+      if (activeTrack !== active && track.volume <= .005) {
+        track.volume = 0;
+        track.pause();
+        activeTrack = active;
+      }
     }
-    const volume = musicTracks.find(({ audio: track }) => track === active).volume;
-    const target = volume * (elapsed < roarDuckUntil ? .2 : 1);
-    if (active.paused) active.play().catch(() => {});
-    active.volume += (target - active.volume) * Math.min(1, dt * 4);
   }
 
   function message(text, seconds = 2) {
@@ -364,7 +388,7 @@
   function syncUi() {
     ui.hero.textContent = heroes[heroIndex].name;
     ui.lives.textContent = '♥ '.repeat(lives).trim() || '—';
-    ui.level.textContent = '1-1';
+    ui.level.textContent = `1-${levelIndex + 1}`;
     ui.score.textContent = String(score).padStart(6, '0');
     ui.ability.textContent = heroes[heroIndex].ability;
     ui.roster.textContent = unlockedPatricia ? 'PATRICIA ✓ DESBLOQUEADA' : 'PATRICIA 🔒';
@@ -372,6 +396,10 @@
 
   function loadLevel(index) {
     levelIndex = index;
+    document.querySelectorAll('.level-card').forEach((card, cardIndex) => {
+      card.classList.toggle('active', cardIndex === index);
+      card.classList.toggle('done', cardIndex < index);
+    });
     const data = current();
     player = { x: 35, y: 170, w: 14, h: 22, vx: 0, vy: 0, grounded: false, facing: 1, invulnerable: 0, attackCd: 0, attackPose: 0, stride: 0 };
     companion = { x: 12, y: 170, vx: 0, stride: 0 };
@@ -384,13 +412,12 @@
     particles = [];
     effects = [];
     encountered = new Set();
-    boss = { x: 1615, y: 168, w: 35, h: 60, hp: 14, maxHp: 14, shotCd: 1.5, invulnerable: 0, alive: true };
-    openingTrack.currentTime = 0;
-    soundtrack.currentTime = 0;
-    crowdTrack.currentTime = 0;
-    bossTrack.currentTime = 0;
-    bossMarch.pause();
-    bossMarch.currentTime = 0;
+    boss = { x: 1615, y: 168, w: 35, h: 60, hp: index === 0 ? 14 : 18, maxHp: index === 0 ? 14 : 18, shotCd: 1.5, invulnerable: 0, alive: true };
+    for (const { audio: track } of musicTracks) {
+      track.pause();
+      track.volume = 0;
+      track.currentTime = 0;
+    }
     bossMarchStart = null;
     activeTrack = null;
     roarDuckUntil = 0;
@@ -402,17 +429,17 @@
     cam = 0;
     elapsed = 0;
     syncUi();
-    message(`NIVEL 1-1: ${data.name}`, 2.1);
+    message(`NIVEL 1-${index + 1}: ${data.name}`, 2.1);
   }
 
-  function begin() {
+  function begin(index = 0) {
     closeRotatePrompt();
     ui.rankingPanel.hidden = true;
     ui.shareStatus.textContent = '';
     score = 0;
     lives = 3;
     heroIndex = 0;
-    loadLevel(0);
+    loadLevel(index);
     setState('playing');
     ui.overlay.hidden = true;
     ui.overlay.classList.remove('result');
@@ -447,7 +474,9 @@
     ui.fullscreen.textContent = active ? '⤡' : '⛶';
   }
 
-  function requestPlay() {
+  function requestPlay(requestedLevel) {
+    pendingLevel = typeof requestedLevel === 'number' ? requestedLevel
+      : state === 'won' && levelIndex < levelData.length - 1 ? levelIndex + 1 : levelIndex;
     if (window.matchMedia('(max-width: 780px), (hover: none) and (pointer: coarse)').matches && !document.fullscreenElement) toggleFullscreen();
     if (!portraitAllowed && window.matchMedia('(orientation: portrait) and (max-width: 780px), (orientation: portrait) and (hover: none) and (pointer: coarse)').matches) {
       ui.rotate.hidden = false;
@@ -456,37 +485,44 @@
       ui.playPortrait.focus();
       return;
     }
-    begin();
+    begin(pendingLevel);
   }
 
   function showEnd(win) {
     setState(win ? 'won' : 'lost');
     syncMusic();
-    if (win) {
+    if (win && levelIndex === 0) {
       unlockedPatricia = true;
+      unlockedLevel2 = true;
       try { localStorage.setItem('smb-patricia-unlocked', 'yes'); } catch { /* The unlock remains available this session. */ }
+      try { localStorage.setItem('smb-level2-unlocked', 'yes'); } catch { /* The unlock remains available this session. */ }
+      ui.level2Start.hidden = false;
       syncUi();
     }
     ui.overlay.hidden = false;
     ui.overlay.classList.add('result');
-    ui.eyebrow.textContent = win ? 'NIVEL 1-1 COMPLETADO' : 'FIN DE PARTIDA';
+    ui.eyebrow.textContent = win ? `NIVEL 1-${levelIndex + 1} COMPLETADO` : 'FIN DE PARTIDA';
     ui.title.innerHTML = win ? '¡LO <em>LOGRAMOS!</em>' : 'VOLVÉ A <em>INTENTARLO</em>';
     ui.body.textContent = win
-      ? `Cristina fue derrotada. ¡Patricia desbloqueada para la próxima partida! Puntaje: ${score}. La Casta llegará en futuros niveles.`
+      ? levelIndex === 0
+        ? `Cristina fue derrotada. ¡Patricia desbloqueada! Puntaje: ${score}. Sigue el nivel 1-2: La economía.`
+        : `La inflación cayó. Puntaje: ${score}. La Casta llegará en futuros niveles.`
       : `Sumaste ${score} puntos. Podés volver a intentar el nivel desde el comienzo.`;
-    ui.play.innerHTML = win ? 'JUGAR DE NUEVO <span>▶</span>' : 'REINTENTAR <span>▶</span>';
+    ui.play.innerHTML = win && levelIndex === 0 ? 'NIVEL 1-2 <span>▶</span>' : win ? 'JUGAR DE NUEVO <span>▶</span>' : 'REINTENTAR <span>▶</span>';
     scoreSubmitted = false;
-    ui.scoreForm.hidden = !win;
+    ui.scoreForm.hidden = false;
     ui.rankingPanel.hidden = false;
-    ui.rankingStatus.textContent = win ? 'Guardá tu puntaje para aparecer en el ranking.' : '';
+    ui.rankingStatus.textContent = 'Guardá tu puntaje para aparecer en el ranking.';
     loadRanking();
     playSfx(win ? 'victory' : 'defeat');
   }
 
   async function loadRanking() {
+    const level = levelIndex + 1;
+    ui.rankingTitle.textContent = `RANKING · NIVEL 1-${level}`;
     ui.rankingStatus.textContent = 'Cargando ranking…';
     try {
-      const response = await fetch('/api/leaderboard');
+      const response = await fetch(`/api/leaderboard?level=${level}`);
       if (!response.ok) throw new Error();
       const { ranking } = await response.json();
       ui.rankingList.replaceChildren();
@@ -508,6 +544,7 @@
   async function shareGame() {
     const url = new URL(window.location.href);
     url.search = '';
+    if (levelIndex === 1) url.searchParams.set('level', '2');
     url.hash = '';
     const text = state === 'won' || state === 'lost'
       ? `Hice ${score.toLocaleString('es-AR')} puntos en Super Milei Bros. ¿Me superás?`
@@ -634,7 +671,7 @@
   }
 
   function maybeLaugh() {
-    if (heroIndex !== 0 || elapsed - lastLaughAt < 10 || Math.random() >= .25) return;
+    if (heroIndex !== 0 || elapsed - lastLaughAt < 7 || Math.random() >= .45) return;
     lastLaughAt = elapsed;
     playSfx('laugh');
   }
@@ -648,12 +685,14 @@
     effect('hit', boss.x + 15, boss.y + 23, 1, .3);
     if (boss.hp <= 0) {
       boss.alive = false;
-      maybeLaugh();
+      if (heroIndex === 0) {
+        lastLaughAt = elapsed;
+        playSfx('laugh');
+      }
       syncMusic();
       score += 2000;
       shots = shots.filter(shot => shot.friendly);
-      message('¡CRISTINA DERROTADA! LLEGÁ A LA META', 2.5);
-      playSfx('victory');
+      message(`¡${current().bossName} DERROTADA! LLEGÁ A LA META`, 2.5);
       syncUi();
     }
   }
@@ -863,9 +902,29 @@
       }
       ctx.globalAlpha = 1;
     } else if (levelIndex === 1) {
-      rect(0, 0, W, H, data.sky);
-      rect(0, 96, W, 134, '#3b3b64');
-      rect(390 - cam * .05, 38, 27, 27, '#e2b78b');
+      const sky = ctx.createLinearGradient(0, 0, 0, 230);
+      sky.addColorStop(0, '#81b6c7');
+      sky.addColorStop(1, '#dae0c5');
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#f1d3a0';
+      ctx.beginPath();
+      ctx.arc(390 - cam * .05, 42, 13, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#9daf99';
+      ctx.beginPath();
+      ctx.moveTo(0, 164);
+      for (let x = 0; x <= W + 30; x += 22) ctx.lineTo(x, 115 + Math.sin((x + cam * .08) / 57) * 17 + Math.sin((x + cam * .08) / 21) * 5);
+      ctx.lineTo(W, 230);
+      ctx.lineTo(0, 230);
+      ctx.fill();
+      ctx.fillStyle = '#7f9b91';
+      ctx.beginPath();
+      ctx.moveTo(0, 185);
+      for (let x = 0; x <= W + 30; x += 18) ctx.lineTo(x, 148 + Math.sin((x + cam * .13) / 49) * 14);
+      ctx.lineTo(W, 230);
+      ctx.lineTo(0, 230);
+      ctx.fill();
     } else {
       rect(0, 0, W, H, data.sky);
       rect(0, 100, W, 130, '#323952');
@@ -873,7 +932,7 @@
     }
     for (let i = -1; i < 14; i++) {
       const x = i * 63 - (cam * .18 % 63);
-      const tall = 34 + (i * 19 % 42);
+      const tall = (levelIndex === 1 ? 25 : 34) + (i * 19 % (levelIndex === 1 ? 24 : 42));
       rect(x, 153 - tall, 52, tall + 78, data.far);
       rect(x - 2, 151 - tall, 56, 3, '#688fa0');
       for (let wx = 8; wx < 48; wx += 15) for (let wy = 9; wy < tall; wy += 15) rect(x + wx, 153 - tall + wy, 4, 6, '#d0bc91');
@@ -892,6 +951,16 @@
       ctx.fill();
       rect(x + 3, 82, 2, 3, '#8da6a4');
       rect(x + 7, 82, 2, 3, '#8da6a4');
+    } else if (levelIndex === 1) {
+      const x = 620 - cam * .18;
+      rect(x - 18, 90, 77, 113, '#d5c6a9');
+      rect(x - 22, 85, 85, 8, '#e8d8b8');
+      for (const tower of [x - 23, x + 44]) {
+        rect(tower, 64, 17, 29, '#d9c7a3');
+        rect(tower + 4, 50, 9, 16, '#c4ae8b');
+        rect(tower + 7, 44, 3, 7, '#eddabd');
+      }
+      rect(x + 12, 153, 17, 50, '#6b655c');
     }
     for (let i = -1; i < 11; i++) {
       const x = i * 83 - (cam * .36 % 83);
@@ -905,25 +974,19 @@
       rect(x + 42, 196 - tall + 8, 13, 2, '#bfd0be');
       rect(x + 29, 196 - 29, 12, 29, '#152238');
     }
-    const castleX = 1500 - cam;
-    if (castleX < W && castleX + 260 > 0) {
-      rect(castleX, 82, 260, 148, '#263349');
-      for (let row = 0; row < 10; row++) {
-        for (let col = 0; col < 13; col++) {
-          const bx = castleX + col * 20 + (row % 2 ? 8 : 0);
-          rect(bx, 82 + row * 15, 18, 13, (row + col) % 3 === 0 ? '#39475a' : '#303e52');
+    if (levelIndex === 1) {
+      const exchangeX = 1510 - cam;
+      if (exchangeX < W && exchangeX + 220 > 0) {
+        rect(exchangeX, 112, 220, 118, '#30434a');
+        rect(exchangeX + 10, 100, 200, 16, '#849b93');
+        rect(exchangeX + 28, 87, 164, 13, '#c5bc9f');
+        text('BOLSA', exchangeX + 110, 98, '#fff1c7', 8, 'center');
+        for (let column = 0; column < 5; column++) {
+          rect(exchangeX + 25 + column * 42, 119, 12, 111, '#a2aaa0');
+          rect(exchangeX + 22 + column * 42, 116, 18, 5, '#d5c7aa');
         }
+        rect(exchangeX + 89, 170, 42, 60, '#172b35');
       }
-      rect(castleX + 80, 103, 100, 126, '#111824');
-      rect(castleX + 92, 113, 76, 117, '#4b2b34');
-      rect(castleX + 102, 120, 56, 110, '#603840');
-      rect(castleX + 63, 89, 134, 23, '#742f36');
-      rect(castleX + 67, 92, 126, 17, '#2a1d2b');
-      text('INFLACIÓN', castleX + 130, 104, '#ffd596', 9, 'center');
-      rect(castleX + 57, 126, 7, 28, '#df8d3d');
-      rect(castleX + 196, 126, 7, 28, '#df8d3d');
-      rect(castleX + 56, 123, 9, 7, '#f9d26b');
-      rect(castleX + 195, 123, 9, 7, '#f9d26b');
     }
     for (const signX of [80, 630, 1120]) {
       const x = signX - cam;
@@ -1112,14 +1175,21 @@
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     if (boss.invulnerable > 0) ctx.globalAlpha = .55 + .45 * Math.sin(elapsed * 48) ** 2;
-    if (sprites.cristina.complete && sprites.cristina.naturalWidth) {
+    if (levelIndex === 0 && sprites.cristina.complete && sprites.cristina.naturalWidth) {
       ctx.drawImage(sprites.cristina, x - 22, y - 14, 79, 73);
+    } else if (levelIndex === 1 && sprites.enemies.complete && sprites.enemies.naturalWidth) {
+      ctx.save();
+      ctx.translate(x + 17, y + 25);
+      ctx.rotate(Math.sin(elapsed * 2) * .08);
+      ctx.drawImage(sprites.enemies, 555, 65, 840, 575, -48, -34, 96, 68);
+      ctx.restore();
+      text('↑', x + 17, y - 11, '#ff8b64', 22, 'center');
     } else {
-      rect(x - 5, y, 48, 58, '#9b3156');
+      rect(x - 5, y, 48, 58, levelIndex === 0 ? '#9b3156' : '#b97044');
     }
     ctx.globalAlpha = 1;
     ctx.imageSmoothingEnabled = false;
-    text('CRISTINA', x + 19, y - 24, '#ffe38c', 7, 'center');
+    text(current().bossName, x + 19, y - 24, '#ffe38c', 7, 'center');
     rect(x - 4, y - 44, 45, 4, '#311d28');
     rect(x - 4, y - 44, 45 * boss.hp / boss.maxHp, 4, '#e56d60');
   }
@@ -1127,10 +1197,11 @@
   function drawFinish() {
     const x = WORLD - 65 - cam;
     rect(x, 159, 3, 71, '#f7ead0');
-    rect(x + 3, 159, 30, 18, '#f1c659');
-    rect(x + 3, 177, 23, 6, '#e16a4b');
-    text('META', x + 16, 171, '#17253b', 7, 'center');
-    if (!boss.alive && x > -50 && x < W + 50) {
+    rect(x + 3, 159, 32, 20, '#f5f4e9');
+    rect(x + 3, 166, 32, 7, '#83c5d6');
+    rect(x + 16, 169, 6, 4, '#e8bd52');
+    text('META', x + 19, 157, '#fff0c4', 7, 'center');
+    if (levelIndex === 0 && !boss.alive && x > -50 && x < W + 50) {
       if (sprites.patricia.complete && sprites.patricia.naturalWidth) {
         ctx.drawImage(sprites.patricia, x - 54, 188, 41, 43);
       }
@@ -1179,7 +1250,7 @@
     drawEffects();
     for (const p of particles) rect(p.x - cam, p.y, 2, 2, p.color);
     if (boss && boss.alive && player.x > 1370) {
-      text('JEFA INTERMEDIA', W / 2, 91, '#ffe09d', 9, 'center');
+      text(levelIndex === 0 ? 'JEFA INTERMEDIA' : 'INFLACIÓN', W / 2, 91, '#ffe09d', 9, 'center');
     }
   }
 
@@ -1316,6 +1387,7 @@
     button.addEventListener('contextmenu', event => event.preventDefault());
   });
   ui.play.addEventListener('click', requestPlay);
+  ui.level2Start.addEventListener('click', () => requestPlay(1));
   ui.rankingButton.addEventListener('click', () => {
     ui.rankingPanel.hidden = !ui.rankingPanel.hidden;
     if (!ui.rankingPanel.hidden) loadRanking();
@@ -1324,7 +1396,7 @@
   ui.shareButton.addEventListener('click', shareGame);
   ui.scoreForm.addEventListener('submit', async event => {
     event.preventDefault();
-    if (state !== 'won' || scoreSubmitted) return;
+    if ((state !== 'won' && state !== 'lost') || scoreSubmitted) return;
     const button = ui.scoreForm.querySelector('button');
     button.disabled = true;
     ui.rankingStatus.textContent = 'Guardando puntaje…';
@@ -1332,7 +1404,7 @@
       const response = await fetch('/api/leaderboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ alias: ui.playerAlias.value, score }),
+        body: JSON.stringify({ alias: ui.playerAlias.value, score, level: levelIndex + 1 }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'No se pudo guardar.');
@@ -1348,7 +1420,7 @@
   ui.playPortrait.addEventListener('click', () => {
     portraitAllowed = true;
     if (!document.fullscreenElement) toggleFullscreen();
-    begin();
+    begin(pendingLevel);
   });
   ui.rotateBack.addEventListener('click', () => {
     closeRotatePrompt();
@@ -1357,7 +1429,7 @@
   });
   window.addEventListener('resize', () => {
     syncFullscreenButton();
-    if (!ui.rotate.hidden && window.matchMedia('(orientation: landscape)').matches) begin();
+    if (!ui.rotate.hidden && window.matchMedia('(orientation: landscape)').matches) begin(pendingLevel);
   });
   ui.mobilePause.addEventListener('click', togglePause);
   ui.fullscreen.addEventListener('click', toggleFullscreen);
@@ -1365,13 +1437,17 @@
   ui.resume.addEventListener('click', togglePause);
   ui.mute.addEventListener('click', () => {
     muted = !muted;
+    if (muted) {
+      lionRoar.pause();
+      javierLaugh.pause();
+    }
     ui.mute.setAttribute('aria-pressed', String(!muted));
     ui.mute.setAttribute('aria-label', muted ? 'Activar sonido' : 'Silenciar');
     ui.mute.textContent = muted ? '♪' : '♫';
     syncMusic();
     playSfx('mute');
   });
-  loadLevel(0);
+  loadLevel(levelIndex);
   setState('menu');
   syncFullscreenButton();
   resizeCanvas();

@@ -1,6 +1,6 @@
 # Super Milei Bros
 
-Un fan game satírico de plataformas, jugable en el navegador y de código abierto. Javier y Karina atraviesan un primer nivel con grupos de piqueteros (cada multitud cuenta como un solo enemigo), ñoquis, billetes de inflación y Cristina como jefa intermedia. Al completarlo se desbloquea Patricia para volver a jugar. Más niveles, aliados y el enfrentamiento con La Casta quedan para futuras versiones.
+Un fan game satírico de plataformas, jugable en el navegador y de código abierto. Javier y Karina atraviesan Buenos Aires en La avenida, que termina con Cristina como jefa intermedia y desbloquea a Patricia. Después viajan a Córdoba en La economía para enfrentar a la inflación. Hay grupos de piqueteros (cada multitud cuenta como un solo enemigo), ñoquis y billetes de inflación. El enfrentamiento con La Casta queda para futuras versiones.
 
 ## Jugar
 
@@ -25,7 +25,7 @@ Al tocar JUGAR en móvil, el juego solicita pantalla completa cuando el navegado
 
 No hay dependencias ni compilación. El juego está hecho con Canvas 2D, JavaScript y CSS. Los fondos y objetos se dibujan en `game.js`; los sprites están en `assets/`. Cada personaje jugable tiene una tira animada de cuatro cuadros (quieto, dos de carrera y ataque), declarada en `heroes` mediante `sprite`; ese formato también se usará para los próximos personajes. La música se reproduce al empezar la partida y se puede silenciar desde el botón superior. Los efectos de sonido se sintetizan en el navegador con Web Audio.
 
-El botón COMPARTIR usa la hoja nativa del móvil o copia un enlace en escritorio. El ranking compartido funciona al desplegar en Vercel y conectar Upstash Redis con las variables de servidor `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN`; al abrir `index.html` directamente, el ranking muestra que no está disponible. Solo se publican alias y puntajes de niveles completados. Es un ranking amistoso: el juego se ejecuta en el cliente y los puntajes no tienen verificación contra trampas. La API limita envíos por dirección de red, sin guardar la dirección en texto plano.
+El botón COMPARTIR usa la hoja nativa del móvil o copia un enlace en escritorio. El ranking compartido funciona al desplegar en Vercel y conectar Upstash Redis con las variables de servidor `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN` (o `KV_REST_API_URL` y `KV_REST_API_TOKEN` de la integración Vercel); al abrir `index.html` directamente, el ranking muestra que no está disponible. Hay tablas separadas para los niveles 1-1 y 1-2. Al terminar una partida se puede publicar un alias y el puntaje. Es un ranking amistoso: el juego se ejecuta en el cliente y los puntajes no tienen verificación contra trampas. La API limita envíos por dirección de red, sin guardar la dirección en texto plano.
 
 La banda sonora toma como referencia el rock guitarrero, el new wave y las marchas de la cultura política argentina, sin usar grabaciones, melodías ni arreglos de las canciones mencionadas. Cambia de pista sin superponerlas al acercarse a una multitud o avanzar por el nivel; el combate con Cristina abre con una marcha breve y continúa con rock más pesado. Las licencias de los audios son independientes de la licencia MIT del código:
 
@@ -34,6 +34,8 @@ La banda sonora toma como referencia el rock guitarrero, el new wave y las march
 - `assets/crowd-rock.mp3`: [Ghosts & Heroes (2025 remaster)](https://opengameart.org/content/ghosts-heroes), Bobjt, CC0.
 - `assets/boss-march.mp3`: [March Two-Step](https://opengameart.org/content/march-two-step), tcarisland, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); fragmento de ocho segundos convertido a MP3 para la entrada del jefe.
 - `assets/boss-battle.mp3`: [Boss Battle 10 Metal](https://opengameart.org/content/boss-battle-10-metal), nene, CC0; convertido de WAV a MP3 para la web.
+- `assets/lion-roar.mp3`: [Lion raring-sound1TamilNadu178.ogg](https://commons.wikimedia.org/wiki/File:Lion_raring-sound1TamilNadu178.ogg), Info-farmer, dominio público; fragmento ecualizado y normalizado.
+- `assets/javier-laugh.mp3`: [Do you remember laughter?](https://opengameart.org/content/do-you-remember-laughter), Supergeek, CC0; fragmento ecualizado y normalizado. Es una risa satírica, no una grabación de Javier Milei.
 
 ## Licencia
 

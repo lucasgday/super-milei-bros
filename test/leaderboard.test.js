@@ -15,16 +15,16 @@ function response() {
 }
 
 test('validates submissions and returns ranked entries', async () => {
-  const entries = [];
+  const entries = new Map();
   let count = 0;
   const originalFetch = global.fetch;
   global.fetch = async (_url, options) => {
-    const [command, , ...args] = JSON.parse(options.body);
+    const [command, key, ...args] = JSON.parse(options.body);
     let result;
     if (command === 'INCR') result = ++count;
     if (command === 'EXPIRE') result = 1;
-    if (command === 'ZADD') { entries.push([args[1], args[0]]); result = 1; }
-    if (command === 'ZREVRANGE') result = entries.flat();
+    if (command === 'ZADD') { entries.set(key, [...(entries.get(key) || []), [args[1], args[0]]]); result = 1; }
+    if (command === 'ZREVRANGE') result = (entries.get(key) || []).flat();
     return { ok: true, json: async () => ({ result }) };
   };
   try {
@@ -39,7 +39,39 @@ test('validates submissions and returns ranked entries', async () => {
     const listed = response();
     await handler({ method: 'GET' }, listed);
     assert.deepEqual(listed.body.ranking, [{ alias: 'Lucas', score: 900 }]);
+
+    const second = response();
+    await handler({ method: 'POST', body: { alias: 'Kari', score: 1200, level: 2 }, headers: {}, socket: {} }, second);
+    assert.equal(second.statusCode, 201);
+    const secondList = response();
+    await handler({ method: 'GET', query: { level: '2' } }, secondList);
+    assert.deepEqual(secondList.body.ranking, [{ alias: 'Kari', score: 1200 }]);
   } finally {
     global.fetch = originalFetch;
+  }
+});
+
+test('accepts Vercel Marketplace KV environment variable names', async () => {
+  const originalFetch = global.fetch;
+  delete process.env.UPSTASH_REDIS_REST_URL;
+  delete process.env.UPSTASH_REDIS_REST_TOKEN;
+  process.env.KV_REST_API_URL = 'https://kv.example.invalid';
+  process.env.KV_REST_API_TOKEN = 'kv-test-token';
+  let calledUrl;
+  global.fetch = async url => {
+    calledUrl = url;
+    return { ok: true, json: async () => ({ result: [] }) };
+  };
+  try {
+    const listed = response();
+    await handler({ method: 'GET' }, listed);
+    assert.equal(listed.statusCode, 200);
+    assert.equal(calledUrl, 'https://kv.example.invalid');
+  } finally {
+    global.fetch = originalFetch;
+    delete process.env.KV_REST_API_URL;
+    delete process.env.KV_REST_API_TOKEN;
+    process.env.UPSTASH_REDIS_REST_URL = 'https://example.invalid';
+    process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
   }
 });
