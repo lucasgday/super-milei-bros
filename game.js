@@ -363,7 +363,7 @@
   function loadLevel(index) {
     levelIndex = index;
     const data = current();
-    player = { x: 35, y: 170, w: 14, h: 22, vx: 0, vy: 0, grounded: false, facing: 1, invulnerable: 0, attackCd: 0, attackPose: 0, stride: 0, checkpoint: 35 };
+    player = { x: 35, y: 170, w: 14, h: 22, vx: 0, vy: 0, grounded: false, facing: 1, invulnerable: 0, attackCd: 0, attackPose: 0, stride: 0 };
     companion = { x: 12, y: 170, vx: 0, stride: 0 };
     enemies = data.enemies.map(([type, x, y]) => ({
       type, x, y, w: type === 'piquetero' ? 48 : type === 'bill' ? 19 : 17, h: type === 'bill' ? 17 : 22,
@@ -476,10 +476,21 @@
       return;
     }
     player.invulnerable = 1.7;
-    player.x = player.checkpoint;
-    player.y = 165;
+    const target = Math.max(35, player.x - 70);
+    for (let i = current().ground.length - 1; i >= 0; i--) {
+      const [start, end] = current().ground[i];
+      if (target >= start + 8) {
+        player.x = clamp(target, start + 8, end - player.w - 8);
+        break;
+      }
+    }
+    player.y = 230 - player.h;
     player.vx = 0;
     player.vy = 0;
+    player.grounded = true;
+    companion.x = Math.max(0, player.x - player.facing * 31);
+    companion.y = player.y;
+    companion.vx = 0;
     shots = shots.filter(s => s.friendly);
     syncUi();
     message('¡CUIDADO! UNA VIDA MENOS', 1.3);
@@ -649,8 +660,6 @@
       }
     }
     if (player.y > H + 35) hurt();
-    if (player.x > 850) player.checkpoint = 965;
-    if (player.x > 1370) player.checkpoint = 1410;
     const companionX = companion.x;
     companion.x += (player.x - player.facing * 31 - companion.x) * Math.min(1, dt * 6);
     companion.vx = (companion.x - companionX) / Math.max(dt, .001);
