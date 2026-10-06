@@ -18,12 +18,26 @@
     <header class="header">
       <div class="logo"><span class="logo-star">★</span> SUPER MILEI BROS <small>ALPHA 01</small></div>
       <div class="header-actions">
+        <div class="controls-menu">
+          <button id="controlsButton" class="controls-trigger" type="button" aria-expanded="false" aria-controls="controlsPopover">⌨ CONTROLES</button>
+          <div id="controlsPopover" class="controls-popover" role="dialog" aria-modal="true" aria-label="Controles de teclado" hidden>
+            <div class="controls-popover-head"><strong>CONTROLES</strong><button id="controlsClose" type="button" aria-label="Cerrar controles">×</button></div>
+            <div class="help">
+              <div><span>MOVER</span><kbd>A</kbd><kbd>D</kbd><span class="or">/</span><kbd>←</kbd><kbd>→</kbd></div>
+              <div><span>SALTAR</span><kbd>ESPACIO</kbd><span class="or">/</span><kbd>↑</kbd></div>
+              <div><span>ATACAR</span><kbd>J</kbd><span class="or">CAMBIAR</span><kbd>Q</kbd></div>
+              <div><span>HABILIDAD</span><kbd>K</kbd><span class="or" id="abilityLabel">MOTOSIERRA</span></div>
+              <div><span>PAUSA</span><kbd>P</kbd></div>
+            </div>
+          </div>
+        </div>
         <a href="https://github.com/lucasgday/super-milei-bros" class="source-link" id="sourceLink">CÓDIGO FUENTE ↗</a>
         <button id="mute" class="icon-button" type="button" aria-label="Silenciar" aria-pressed="true">♫</button>
         <button id="fullscreen" class="icon-button mobile-fullscreen" type="button" aria-label="Pantalla completa" hidden>⛶</button>
         <button id="mobilePause" class="icon-button mobile-pause" type="button" aria-label="Pausar" aria-pressed="false">Ⅱ</button>
       </div>
     </header>
+    <div id="controlsScrim" class="controls-scrim" aria-hidden="true" hidden></div>
 
     <section class="stage-shell" aria-label="Super Milei Bros">
       <div class="hud">
@@ -131,14 +145,6 @@
           <div class="level-card"><span>03</span><strong>La casta</strong><small>Próximamente</small></div>
         </div>
         <div class="roster"><span>PERSONAJES</span><strong>JAVIER · KARINA</strong><small id="rosterUnlock">PATRICIA 🔒</small></div>
-      </div>
-      <div class="help">
-        <div class="section-label">CONTROLES</div>
-        <div><span>MOVER</span><kbd>A</kbd><kbd>D</kbd><span class="or">/</span><kbd>←</kbd><kbd>→</kbd></div>
-        <div><span>SALTAR</span><kbd>ESPACIO</kbd><span class="or">/</span><kbd>↑</kbd></div>
-        <div><span>ATACAR</span><kbd>J</kbd><span class="or">CAMBIAR</span><kbd>Q</kbd></div>
-        <div><span>HABILIDAD</span><kbd>K</kbd><span class="or" id="abilityLabel">MOTOSIERRA</span></div>
-        <div><span>PAUSA</span><kbd>P</kbd></div>
       </div>
     </section>
 

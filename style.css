@@ -279,3 +279,20 @@ footer a:hover{text-decoration:underline;color:#ffe296}
   .decision-sources a{font-size:10px}
 }
 @media(max-width:520px) and (orientation:portrait){.decision-choices{grid-template-columns:1fr}}
+
+.below{display:block}
+.controls-menu{position:relative}
+.controls-trigger{min-height:36px;padding:0 12px;border:1px solid #607685;border-radius:4px;background:#263b4a;color:#f8e6ba;font:700 12px 'Space Grotesk',Arial,sans-serif}
+.controls-trigger:hover,.controls-trigger[aria-expanded="true"]{background:#38546a;border-color:#a6c9c7}
+.header.is-controls-open{position:relative;z-index:11}
+.controls-scrim{position:fixed;z-index:10;inset:0;background:#07121b55;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.controls-scrim[hidden],.controls-popover[hidden]{display:none}
+.controls-popover{position:absolute;z-index:12;top:calc(100% + 12px);right:0;width:350px;max-width:calc(100vw - 28px);padding:16px;border:1px solid #8ab0b5;border-radius:5px;background:#142a38;box-shadow:0 18px 48px #030b14b8}
+.controls-popover-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;color:#ffe2a4;font-size:13px}
+.controls-popover-head button{width:30px;height:30px;border:1px solid #688491;border-radius:3px;background:#254352;color:#fff;font-size:22px;line-height:1}
+.controls-popover-head button:hover{background:#386071}
+.controls-popover .help{display:block;padding:0;border:0}
+.controls-popover .help>div{display:flex;align-items:center;gap:5px;padding:7px 0;border-top:1px solid #365361;font-size:11px}
+.controls-popover .help>div>span:first-child{width:76px;flex:none}
+.controls-popover .help .or{white-space:nowrap}
+@media(max-width:780px),(hover:none) and (pointer:coarse){.controls-menu,.controls-scrim{display:none}}

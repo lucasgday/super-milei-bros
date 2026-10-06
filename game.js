@@ -6,6 +6,11 @@
 
   const ui = {
     header: document.querySelector('.header'),
+    controlsMenu: document.querySelector('.controls-menu'),
+    controlsButton: document.getElementById('controlsButton'),
+    controlsPopover: document.getElementById('controlsPopover'),
+    controlsClose: document.getElementById('controlsClose'),
+    controlsScrim: document.getElementById('controlsScrim'),
     overlay: document.getElementById('overlay'),
     eyebrow: document.getElementById('overlayEyebrow'),
     title: document.getElementById('overlayTitle'),
@@ -318,6 +323,32 @@
     setState(state === 'playing' ? 'paused' : 'playing');
     ui.pause.hidden = state !== 'paused';
     syncMusic();
+  }
+
+  function closeControls() {
+    if (ui.controlsPopover.hidden) return;
+    ui.controlsPopover.hidden = true;
+    ui.controlsScrim.hidden = true;
+    ui.controlsButton.setAttribute('aria-expanded', 'false');
+    ui.header.classList.remove('is-controls-open');
+    if (controlsPausedGame && state === 'paused') togglePause();
+    controlsPausedGame = false;
+    if (ui.controlsButton.getClientRects().length) ui.controlsButton.focus();
+    else canvas.focus();
+  }
+
+  function toggleControls() {
+    if (!ui.controlsPopover.hidden) {
+      closeControls();
+      return;
+    }
+    controlsPausedGame = state === 'playing';
+    if (controlsPausedGame) togglePause();
+    ui.controlsPopover.hidden = false;
+    ui.controlsScrim.hidden = false;
+    ui.controlsButton.setAttribute('aria-expanded', 'true');
+    ui.header.classList.add('is-controls-open');
+    ui.controlsClose.focus();
   }
 
   function playSfx(kind) {
@@ -1648,6 +1679,12 @@
 
   const keyMap = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'Space', 'KeyA', 'KeyD', 'KeyW', 'KeyJ', 'KeyK', 'KeyQ', 'KeyP', 'Enter']);
   window.addEventListener('keydown', event => {
+    if (!ui.controlsPopover.hidden) {
+      if (event.key === 'Escape') closeControls();
+      else if (event.key === 'Tab') ui.controlsClose.focus();
+      event.preventDefault();
+      return;
+    }
     if (state === 'decision') {
       if (event.key === 'Tab') {
         const focusable = [...ui.decisionPanel.querySelectorAll('button, a')];
@@ -1799,6 +1836,15 @@
   ui.level2Start.addEventListener('click', () => showIntro(1));
   ui.decisionPanel.querySelectorAll('[data-decision]').forEach(button => {
     button.addEventListener('click', () => chooseDecision(button.dataset.decision));
+  });
+  ui.controlsButton.addEventListener('click', toggleControls);
+  ui.controlsClose.addEventListener('click', closeControls);
+  ui.controlsScrim.addEventListener('click', closeControls);
+  document.addEventListener('pointerdown', event => {
+    if (!ui.controlsPopover.hidden && !ui.controlsMenu.contains(event.target)) closeControls();
+  });
+  window.addEventListener('resize', () => {
+    if (!ui.controlsPopover.hidden && window.matchMedia('(max-width: 780px), (hover: none) and (pointer: coarse)').matches) closeControls();
   });
   ui.rankingButton.addEventListener('click', () => {
     ui.rankingPanel.hidden = !ui.rankingPanel.hidden;
