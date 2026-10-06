@@ -7,12 +7,14 @@
   const list = document.getElementById('ideasList');
   const status = document.getElementById('ideasStatus');
   const form = document.getElementById('ideaForm');
+  const intro = panel.querySelector('.ideas-intro');
   const rankingPanel = document.getElementById('rankingPanel');
   const mobileLayout = window.matchMedia('(max-width: 780px), (hover: none) and (pointer: coarse)');
   let ideas = [];
   let available = false;
   let paymentEnabled = false;
   let loading = false;
+  const returnStatus = new URLSearchParams(window.location.search).get('vote');
 
   function syncLayout() {
     panel.hidden = mobileLayout.matches;
@@ -75,6 +77,9 @@
       ideas = data.ideas;
       available = data.available;
       paymentEnabled = data.paymentEnabled;
+      intro.textContent = paymentEnabled
+        ? 'Apoyá las ideas que querés ver en el juego. Cada voto cuesta ARS 1.000 y se cuenta sólo cuando Mercado Pago confirma el pago. Las propuestas nuevas se revisan antes de publicarse.'
+        : 'Elegí qué ideas te gustaría ver en el juego. Las propuestas nuevas se revisan antes de publicarse.';
       form.hidden = !available;
       status.textContent = paymentEnabled ? '' : available ? 'Los votos pagos estarán disponibles pronto.' : 'Votos y envíos disponibles en la versión online.';
       render();
@@ -84,6 +89,13 @@
       form.hidden = true;
       status.textContent = ideas.length ? 'Votos y envíos no disponibles en este momento.' : 'No pudimos cargar las propuestas. Probá de nuevo más tarde.';
       render();
+    }
+    if (returnStatus === 'success' || returnStatus === 'pending') {
+      status.textContent = 'Si completaste el pago, el voto aparecerá cuando Mercado Pago lo confirme.';
+      if (mobileLayout.matches) panel.hidden = false;
+    } else if (returnStatus === 'failure') {
+      status.textContent = 'El retorno indica que el pago no se completó. Sólo cuentan pagos confirmados.';
+      if (mobileLayout.matches) panel.hidden = false;
     }
     loading = false;
   }
