@@ -79,9 +79,12 @@
   const buttonHeld = new Set();
   const controlPointers = new Map();
   const heroes = [
-    { name: 'JAVIER', speed: 133, jump: 285, ability: 'RUGIDO DEL LEÓN', sprite: sprites.javierAnimated },
-    { name: 'KARINA', speed: 146, jump: 315, ability: 'ESCUDO ESTRATÉGICO', sprite: sprites.karinaAnimated },
-    { name: 'PATRICIA', speed: 150, jump: 290, ability: 'EMBESTIDA', sprite: sprites.patriciaAnimated },
+    { name: 'JAVIER', speed: 133, jump: 285, ability: 'RUGIDO DEL LEÓN', sprite: sprites.javierAnimated,
+      crops: [[12, 472], [528, 472], [1040, 470], [1560, 604]] },
+    { name: 'KARINA', speed: 146, jump: 315, ability: 'ESCUDO ESTRATÉGICO', sprite: sprites.karinaAnimated,
+      crops: [[48, 448], [528, 500], [1072, 472], [1568, 604]] },
+    { name: 'PATRICIA', speed: 150, jump: 290, ability: 'EMBESTIDA', sprite: sprites.patriciaAnimated,
+      crops: [[48, 448], [580, 452], [1096, 432], [1576, 584]] },
   ];
 
   const levelData = [{
@@ -918,11 +921,11 @@
         ctx.scale(-1, 1);
       }
       if (sheet === animated) {
-        const runFrames = [1, 0, 2, 0];
         const frame = active && motion.attackPose > 0 ? 3
-          : Math.abs(motion.vx) > 8 ? runFrames[Math.floor(motion.stride) % runFrames.length] : 0;
+          : Math.abs(motion.vx) > 8 ? 1 + Math.floor(motion.stride) % 2 : 0;
+        const [sourceX, sourceWidth] = heroes[who].crops[frame];
         const width = frame === 3 ? 49 : 44;
-        ctx.drawImage(sheet, frame * 543, 40, 543, 610, x + 7 - width / 2, y - 24, width, 46);
+        ctx.drawImage(sheet, sourceX, 40, sourceWidth, 610, x + 7 - width / 2, y - 24, width, 46);
       } else if (who === 2) {
         ctx.drawImage(sheet, 0, 0, sheet.naturalWidth, sheet.naturalHeight, x - 14, y - 21, 43, 43);
       } else {
