@@ -10,6 +10,8 @@
     eyebrow: document.getElementById('overlayEyebrow'),
     title: document.getElementById('overlayTitle'),
     body: document.getElementById('overlayBody'),
+    storySource: document.getElementById('storySource'),
+    storyBoss: document.getElementById('storyBoss'),
     play: document.getElementById('play'),
     level2Start: document.getElementById('level2Start'),
     rotate: document.getElementById('rotatePrompt'),
@@ -128,6 +130,25 @@
     ],
     coins: [[135, 164], [190, 158], [328, 138], [510, 151], [675, 126], [810, 161], [1020, 150], [1190, 127], [1340, 163], [1515, 150]],
   }];
+
+  const storyScenes = [
+    {
+      introTitle: 'AL BORDE DEL ABISMO',
+      intro: 'La Argentina cargaba con lo peor de tres crisis. La hiperinflación asomaba en el horizonte. Javier y Karina salen a recorrer la avenida.',
+      introSource: 'https://www.casarosada.gob.ar/informacion/discursos/50514-cadena-nacional-del-presidente-de-la-nacion-javier-milei-en-el-dia-de-la-conmemoracion-del-aniversario-numero-214-de-la-revolucion-de-mayo-en-el-cabildo-de-cordoba',
+      outroTitle: 'JUSTICIA',
+      outro: 'En esta ficción satírica, Cristina queda tras las rejas. “Por eso tienen a su líder presa”, dijo Milei en el Congreso. Patricia se desbloqueó.',
+      outroSource: 'https://www.casarosada.gob.ar/slider-principal/51181-discurso-del-presidente-de-la-nacion-javier-milei-en-la-apertura-del-144-periodo-de-sesiones-ordinarias-del-congreso-de-la-nacion',
+    },
+    {
+      introTitle: 'LA BATALLA DE LA ECONOMÍA',
+      intro: 'El equilibrio fiscal marca el rumbo. En Córdoba, la inflación aguarda entre los edificios de la Bolsa. La segunda batalla comienza.',
+      introSource: 'https://www.casarosada.gob.ar/informacion/discursos/50748-palabras-del-presidente-de-la-nacion-javier-milei-en-el-ieral-desde-la-provincia-de-cordoba',
+      outroTitle: 'EQUILIBRIO',
+      outro: 'La inflación cayó en este nivel. La batalla por el déficit cero continúa. Más allá espera la Casta.',
+      outroSource: 'https://www.casarosada.gob.ar/informacion/discursos/50748-palabras-del-presidente-de-la-nacion-javier-milei-en-el-ieral-desde-la-provincia-de-cordoba',
+    },
+  ];
 
   let state = 'menu';
   let levelIndex = new URLSearchParams(window.location.search).get('level') === '2' ? 1 : 0;
@@ -419,7 +440,7 @@
     particles = [];
     effects = [];
     encountered = new Set();
-    boss = { x: 1615, y: 168, w: 35, h: 60, hp: index === 0 ? 14 : 18, maxHp: index === 0 ? 14 : 18, shotCd: 1.5, invulnerable: 0, alive: true };
+    boss = { x: 1615, y: 168, w: 35, h: 60, hp: index === 0 ? 14 : 18, maxHp: index === 0 ? 14 : 18, shotCd: 1.5, invulnerable: 0, alive: true, jailed: false };
     for (const { audio: track } of musicTracks) {
       track.pause();
       track.volume = 0;
@@ -454,9 +475,27 @@
     setState('playing');
     ui.overlay.hidden = true;
     ui.overlay.classList.remove('result');
+    ui.overlay.classList.remove('story-intro');
+    ui.rankingButton.textContent = '🏆 RANKING';
     ui.pause.hidden = true;
     syncMusic();
     playSfx('start');
+  }
+
+  function showIntro(index) {
+    pendingLevel = index;
+    const scene = storyScenes[index];
+    ui.overlay.classList.remove('result');
+    ui.overlay.classList.add('story-intro');
+    ui.rankingPanel.hidden = true;
+    ui.storyBoss.hidden = true;
+    ui.eyebrow.textContent = `CAPÍTULO 1-${index + 1} · ${levelData[index].name}`;
+    ui.title.textContent = scene.introTitle;
+    ui.body.textContent = scene.intro;
+    ui.storySource.href = scene.introSource;
+    ui.storySource.hidden = false;
+    ui.play.innerHTML = 'EMPEZAR <span>▶</span>';
+    ui.overlay.hidden = false;
   }
 
   function closeRotatePrompt() {
@@ -511,18 +550,19 @@
       syncUi();
     }
     ui.overlay.hidden = false;
+    ui.overlay.classList.remove('story-intro');
     ui.overlay.classList.add('result');
-    ui.eyebrow.textContent = win ? `NIVEL 1-${levelIndex + 1} COMPLETADO` : 'FIN DE PARTIDA';
-    ui.title.innerHTML = win ? '¡LO <em>LOGRAMOS!</em>' : 'VOLVÉ A <em>INTENTARLO</em>';
-    ui.body.textContent = win
-      ? levelIndex === 0
-        ? `Cristina fue derrotada. ¡Patricia desbloqueada! Puntaje: ${score}. Sigue el nivel 1-2: La economía.`
-        : `La inflación cayó. Puntaje: ${score}. La Casta llegará en futuros niveles.`
-      : `Sumaste ${score} puntos. Podés volver a intentar el nivel desde el comienzo.`;
+    ui.eyebrow.textContent = win ? `NIVEL 1-${levelIndex + 1} COMPLETADO · FICCIÓN SATÍRICA` : 'FIN DE PARTIDA';
+    ui.title.textContent = win ? storyScenes[levelIndex].outroTitle : 'VOLVÉ A INTENTARLO';
+    ui.body.textContent = win ? `${storyScenes[levelIndex].outro} Puntaje: ${score}.` : `Sumaste ${score} puntos. Podés volver a intentar el nivel desde el comienzo.`;
+    ui.storyBoss.hidden = !win || levelIndex !== 0;
+    ui.storySource.hidden = !win;
+    if (win) ui.storySource.href = storyScenes[levelIndex].outroSource;
     ui.play.innerHTML = win && levelIndex === 0 ? 'NIVEL 1-2 <span>▶</span>' : win ? 'JUGAR DE NUEVO <span>▶</span>' : 'REINTENTAR <span>▶</span>';
     scoreSubmitted = false;
     ui.scoreForm.hidden = false;
-    ui.rankingPanel.hidden = false;
+    ui.rankingPanel.hidden = true;
+    ui.rankingButton.textContent = '🏆 GUARDAR PUNTAJE';
     ui.rankingStatus.textContent = 'Guardá tu puntaje para aparecer en el ranking.';
     loadRanking();
     playSfx(win ? 'victory' : 'defeat');
@@ -701,6 +741,7 @@
     effect('hit', boss.x + 15, boss.y + 23, 1, .3);
     if (boss.hp <= 0) {
       boss.alive = false;
+      boss.jailed = levelIndex === 0;
       if (heroIndex === 0) {
         lastLaughAt = elapsed;
         playSfx('laugh');
@@ -1242,9 +1283,9 @@
   }
 
   function drawBoss() {
-    if (!boss || !boss.alive) return;
+    if (!boss || (!boss.alive && !boss.jailed)) return;
     const x = Math.round(boss.x - cam);
-    const y = Math.round(boss.y);
+    const y = Math.round(boss.jailed ? 168 : boss.y);
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     if (boss.invulnerable > 0) ctx.globalAlpha = .55 + .45 * Math.sin(elapsed * 48) ** 2;
@@ -1262,6 +1303,16 @@
     }
     ctx.globalAlpha = 1;
     ctx.imageSmoothingEnabled = false;
+    if (boss.jailed) {
+      rect(x - 27, y - 20, 88, 5, '#b7b8ae');
+      rect(x - 27, y + 61, 88, 6, '#78838a');
+      for (let bar = 0; bar < 8; bar++) {
+        const barX = x - 25 + bar * 12;
+        rect(barX, y - 15, 4, 76, '#354452');
+        rect(barX, y - 15, 1, 76, '#d7d9cb');
+      }
+      return;
+    }
     if (elapsed < bossLabelUntil) text(current().bossName, x + 19, y - 24, '#ffe38c', 7, 'center');
     rect(x - 4, y - 44, 45, 4, '#311d28');
     rect(x - 4, y - 44, 45 * boss.hp / boss.maxHp, 4, '#e56d60');
@@ -1367,7 +1418,8 @@
     if (event.code === 'KeyK') abilityQueued = true;
     if (event.code === 'Space' || event.code === 'ArrowUp' || event.code === 'KeyW') jumpQueued = true;
     if (event.code === 'KeyP') togglePause();
-    if (event.code === 'Enter' && ui.rotate.hidden && (state === 'menu' || state === 'won' || state === 'lost')) requestPlay();
+    if (event.code === 'Enter' && ui.rotate.hidden && (state === 'menu' || state === 'won' || state === 'lost') &&
+        (document.activeElement === document.body || document.activeElement === ui.play)) ui.play.click();
   });
   window.addEventListener('keyup', event => held.delete(event.code));
   window.addEventListener('blur', () => {
@@ -1476,8 +1528,11 @@
     });
     button.addEventListener('contextmenu', event => event.preventDefault());
   });
-  ui.play.addEventListener('click', requestPlay);
-  ui.level2Start.addEventListener('click', () => requestPlay(1));
+  ui.play.addEventListener('click', () => {
+    if (ui.overlay.classList.contains('story-intro')) requestPlay(pendingLevel);
+    else showIntro(state === 'won' && levelIndex < levelData.length - 1 ? levelIndex + 1 : levelIndex);
+  });
+  ui.level2Start.addEventListener('click', () => showIntro(1));
   ui.rankingButton.addEventListener('click', () => {
     ui.rankingPanel.hidden = !ui.rankingPanel.hidden;
     if (!ui.rankingPanel.hidden) loadRanking();

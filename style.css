@@ -169,3 +169,23 @@ body:not([data-game-state="menu"]) .ranking-preview{display:none}
 #rankingList li{display:flex;justify-content:space-between;gap:14px;padding:6px 2px;border-bottom:1px solid #486471;font-size:13px}
 #rankingList li strong{color:#ffe18f;font-variant-numeric:tabular-nums}
 @media(max-width:780px){.ranking-panel{inset:4%;padding:10px 12px}.ranking-head strong{font-size:14px}.social-actions{margin-top:6px}.social-actions button{font-size:11px;min-height:32px}.ranking-preview{font-size:9px!important;margin-top:4px!important}}
+.story-source{display:inline-block;margin:0 0 12px;color:#9ed9d4;font:700 10px/1.3 'Space Grotesk',Arial,sans-serif;text-decoration:underline;text-underline-offset:3px}
+.story-source[hidden],.story-boss[hidden]{display:none}
+.story-source:hover{color:#fff0b3}
+.overlay.story-intro{background:#08111cef}
+.story-intro .overlay-art,.story-intro .social-actions,.story-intro .ranking-preview,.story-intro .share-status,.story-intro .fullscreen-help,.story-intro .level2-start{display:none}
+.story-intro .eyebrow{color:#e8be72;letter-spacing:0}
+.story-intro h1{max-width:90%;color:#ffe296;font-size:clamp(20px,3vw,32px);line-height:1.5;animation:story-rise .65s ease-out both}
+.story-intro #overlayBody{max-width:590px;color:#f3dfaf;font-size:clamp(15px,1.7vw,22px);font-weight:700;line-height:1.5;animation:story-rise .8s .2s ease-out both}
+.story-intro .story-source{animation:story-rise .8s .35s ease-out both}
+.overlay.result .overlay-art{display:none}
+.overlay.result #overlayBody{max-width:600px;margin:14px 0;color:#f4dfb5;font-size:16px;line-height:1.45}
+.overlay.result h1{font-size:clamp(21px,3.4vw,35px)}
+.story-boss{position:relative;display:grid;place-items:center;width:96px;height:105px;margin:0 0 10px;overflow:hidden;border:5px solid #9da8aa;background:#26313c;box-shadow:4px 5px #080e17}
+.story-boss img{width:91px;height:102px;object-fit:contain;object-position:center bottom;image-rendering:pixelated}
+.story-bars{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 13px,#d6d9d1 13px 16px,#34434e 16px 20px);border-top:5px solid #d6d9d1;border-bottom:5px solid #34434e;pointer-events:none}
+footer a{color:#9ed9d4;text-decoration:none}
+footer a:hover{text-decoration:underline;color:#ffe296}
+@keyframes story-rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.story-intro h1,.story-intro #overlayBody,.story-intro .story-source{animation:none}}
+@media(max-width:780px){.story-intro h1{font-size:clamp(17px,4vw,25px)}.story-intro #overlayBody{font-size:13px;margin:9px 0!important;max-width:470px}.story-source{font-size:9px;margin-bottom:7px}.overlay.result #overlayBody{font-size:12px;margin:7px 0}.overlay.result .story-boss{width:60px;height:62px;margin-bottom:5px;border-width:3px}.overlay.result .story-boss img{width:57px;height:58px}.overlay.result .story-bars{background:repeating-linear-gradient(90deg,transparent 0 8px,#d6d9d1 8px 10px,#34434e 10px 12px);border-width:3px}}
