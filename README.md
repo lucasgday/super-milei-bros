@@ -48,3 +48,7 @@ La banda sonora toma como referencia el rock guitarrero, el new wave y las march
 ## Licencia
 
 Código disponible bajo la licencia MIT. Este proyecto es una sátira independiente y no tiene afiliación oficial con las personas representadas.
+
+## Contribuir
+
+Para reportar bugs, proponer personajes o enviar un pull request, leé la [guía para contribuir](CONTRIBUTING.md).
