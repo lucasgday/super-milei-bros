@@ -38,14 +38,22 @@ test('validates submissions and returns ranked entries', async () => {
 
     const listed = response();
     await handler({ method: 'GET' }, listed);
-    assert.deepEqual(listed.body.ranking, [{ alias: 'Lucas', score: 900 }]);
+    assert.deepEqual(listed.body.ranking, [{ alias: 'Lucas', score: 900, level: 1 }]);
 
     const second = response();
     await handler({ method: 'POST', body: { alias: 'Kari', score: 1200, level: 2 }, headers: {}, socket: {} }, second);
     assert.equal(second.statusCode, 201);
     const secondList = response();
-    await handler({ method: 'GET', query: { level: '2' } }, secondList);
-    assert.deepEqual(secondList.body.ranking, [{ alias: 'Kari', score: 1200 }]);
+    await handler({ method: 'GET' }, secondList);
+    assert.deepEqual(secondList.body.ranking, [
+      { alias: 'Kari', score: 1200, level: 2 },
+      { alias: 'Lucas', score: 900, level: 1 },
+    ]);
+
+    entries.set('super-milei-bros:level-1:ranking-v1', [[JSON.stringify({ alias: 'Histórico', id: 'old' }), 750]]);
+    const migrated = response();
+    await handler({ method: 'GET' }, migrated);
+    assert.deepEqual(migrated.body.ranking[2], { alias: 'Histórico', score: 750, level: 1 });
   } finally {
     global.fetch = originalFetch;
   }

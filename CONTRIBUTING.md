@@ -5,7 +5,8 @@
 ## Antes de empezar
 
 - Para un bug, abrí un issue con pasos para reproducirlo, navegador, sistema operativo y, si afecta la interfaz, una captura o video.
-- Para un personaje, nivel o cambio grande de jugabilidad, abrí primero un issue con la idea y su alcance. Así podemos acordar el diseño antes de producir assets.
+- Para proponer un personaje, nivel o mecánica sin usar GitHub, entrá al juego y abrí **IDEAS**. Podés votar propuestas visibles o enviar una nueva; las nuevas se revisan antes de publicarse.
+- Si vas a implementar un cambio grande de jugabilidad, abrí primero un issue con la idea y su alcance. Así podemos acordar el diseño antes de producir assets.
 - No incluyas secretos, datos personales ni credenciales en issues, commits o pull requests.
 
 ## Desarrollo local
@@ -20,12 +21,12 @@ python3 -m http.server 8000
 
 Abrí `http://localhost:8000/`. También podés abrir `index.html` directamente, pero el ranking compartido requiere el despliegue con su backend y Redis; no pongas credenciales de Redis en el cliente.
 
-El juego está en `game.js`, la interfaz en `index.html` y `style.css`, los recursos en `assets/`, y el ranking en `api/leaderboard.js`. Sus pruebas están en `test/leaderboard.test.js`.
+El juego está en `game.js`, la interfaz en `index.html` y `style.css`, los recursos en `assets/`, el ranking en `api/leaderboard.js` y las ideas en `ideas.json`, `ideas.js` y `api/ideas.js`. Las pruebas están en `test/`.
 
 ## Antes de enviar un PR
 
 1. Hacé un fork, creá una rama para tu cambio y mantené el PR enfocado en una sola mejora.
-2. Corré `node --check game.js` y `node --test test/leaderboard.test.js`. Si tocaste otros archivos JavaScript, comprobá también su sintaxis.
+2. Corré `node --check game.js`, `node --check ideas.js`, `node --check api/ideas.js` y `node --test test/*.test.js`. Si tocaste otros archivos JavaScript, comprobá también su sintaxis.
 3. Probá manualmente el flujo afectado en escritorio y, si cambiaste controles o diseño, en móvil vertical y apaisado. Incluí capturas de los cambios visuales en el PR.
 4. Explicá qué cambiaste, cómo lo probaste y qué quedó sin verificar.
 

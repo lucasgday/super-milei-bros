@@ -207,3 +207,25 @@ footer a:hover{text-decoration:underline;color:#ffe296}
   body[data-game-state="paused"] #mobilePause{display:none}
   .hud{top:env(safe-area-inset-top);padding:6px max(10px,env(safe-area-inset-right)) 16px max(10px,env(safe-area-inset-left))}
 }
+.social-actions{flex-wrap:wrap}
+.ideas-panel{position:absolute;z-index:6;inset:5%;overflow:auto;padding:16px 22px;background:#102434f7;border:2px solid #78aeb1;box-shadow:0 12px 35px #0009;text-align:left;color:#fff}
+.ideas-panel[hidden],#ideaForm[hidden]{display:none}
+.overlay:has(.ideas-panel:not([hidden])){z-index:8}
+.ideas-panel .ranking-head{position:sticky;top:0;z-index:1;background:#102434}
+.ideas-panel button{min-height:36px;padding:7px 12px;border:1px solid #90c6c0;border-radius:3px;background:#163947;color:#f3f7e8;font:700 12px 'Space Grotesk',Arial,sans-serif}
+.ideas-panel button:hover:not(:disabled){background:#256070}
+.ideas-panel button:disabled{opacity:.62;cursor:default}
+.ideas-intro{max-width:670px!important;margin:10px 0!important;color:#c5d9d8!important;font-size:13px!important;line-height:1.4!important}
+#ideasStatus{min-height:18px;margin:7px 0;color:#ffe4a0;font-size:12px}
+.idea-row{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:11px 0;border-top:1px solid #41606c}
+.idea-row h3{margin:0 0 5px;color:#fff0bc;font-size:15px}
+.idea-row p{margin:0;color:#d2e1df;font-size:12px;line-height:1.4}
+.idea-row .idea-vote{flex:none;min-width:116px;border-color:#e1c783;background:#5b4b24;color:#fff0bc}
+.idea-row .idea-vote:hover:not(:disabled){background:#79632e}
+#ideaForm{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:end;margin-top:14px;padding-top:12px;border-top:1px solid #68898b}
+#ideaForm strong,#ideaForm label,#ideaForm textarea{grid-column:1/-1}
+#ideaForm strong{color:#ffe18f;font-size:14px}
+#ideaForm label{font-size:11px;font-weight:700;color:#a7d7d0}
+#ideaForm input,#ideaForm textarea{width:100%;min-height:36px;padding:8px 9px;border:1px solid #86b8b8;border-radius:3px;background:#f5f7ef;color:#102434;font:600 14px 'Space Grotesk',Arial,sans-serif}
+#ideaForm textarea{resize:vertical}
+@media(max-width:780px){.ideas-panel{inset:4%;padding:10px 12px}.ideas-intro{font-size:11px!important}.idea-row{gap:8px}.idea-row h3{font-size:12px}.idea-row p{font-size:10px}.idea-row .idea-vote{min-width:82px;padding:6px;font-size:10px}#ideaForm{grid-template-columns:1fr}#ideaForm input,#ideaForm button{grid-column:1/-1}}

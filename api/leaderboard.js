@@ -1,6 +1,7 @@
 const crypto = require('node:crypto');
 
-const keyFor = level => `super-milei-bros:level-${level}:ranking-v1`;
+const rankingKey = 'super-milei-bros:global:ranking-v1';
+const legacyKeyFor = level => `super-milei-bros:level-${level}:ranking-v1`;
 const redisUrl = () => process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
 const redisToken = () => process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 
@@ -27,15 +28,16 @@ module.exports = async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      const level = Number(req.query?.level || 1);
-      if (level !== 1 && level !== 2) return res.status(400).json({ error: 'Nivel inválido' });
-      const rows = await redis(['ZREVRANGE', keyFor(level), 0, 9, 'WITHSCORES']);
       const ranking = [];
-      for (let i = 0; i < rows.length; i += 2) {
-        const entry = JSON.parse(rows[i]);
-        ranking.push({ alias: entry.alias, score: Number(rows[i + 1]) });
+      for (const [key, level] of [[rankingKey, null], [legacyKeyFor(1), 1], [legacyKeyFor(2), 2]]) {
+        const rows = await redis(['ZREVRANGE', key, 0, 9, 'WITHSCORES']);
+        for (let i = 0; i < rows.length; i += 2) {
+          const entry = JSON.parse(rows[i]);
+          ranking.push({ alias: entry.alias, score: Number(rows[i + 1]), level: entry.level || level });
+        }
       }
-      return res.status(200).json({ ranking });
+      ranking.sort((a, b) => b.score - a.score);
+      return res.status(200).json({ ranking: ranking.slice(0, 10) });
     }
 
     if (req.method !== 'POST') {
@@ -56,7 +58,7 @@ module.exports = async function handler(req, res) {
     if (count === 1) await redis(['EXPIRE', rateKey, 3600]);
     if (count > 5) return res.status(429).json({ error: 'Demasiados intentos. Probá más tarde.' });
 
-    await redis(['ZADD', keyFor(level), score, JSON.stringify({ alias: name, id: crypto.randomUUID() })]);
+    await redis(['ZADD', rankingKey, score, JSON.stringify({ alias: name, level, id: crypto.randomUUID() })]);
     return res.status(201).json({ ok: true });
   } catch {
     return res.status(503).json({ error: 'El ranking no está disponible ahora.' });

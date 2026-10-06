@@ -51,11 +51,12 @@
         <button class="level2-start" id="level2Start" type="button" hidden>IR AL NIVEL 1-2 <span>▶</span></button>
         <div class="social-actions">
           <button id="rankingButton" type="button">🏆 RANKING</button>
+          <button id="ideasButton" type="button">💡 IDEAS</button>
           <button id="shareButton" type="button">↗ COMPARTIR</button>
         </div>
         <p class="ranking-preview" id="rankingPreview" aria-live="polite">TOP 3 · CARGANDO…</p>
         <div class="ranking-panel" id="rankingPanel" hidden>
-          <div class="ranking-head"><strong id="rankingTitle">RANKING · NIVEL 1-1</strong><button id="rankingClose" type="button" aria-label="Cerrar ranking">×</button></div>
+          <div class="ranking-head"><strong id="rankingTitle">RANKING GLOBAL</strong><button id="rankingClose" type="button" aria-label="Cerrar ranking">×</button></div>
           <form id="scoreForm" autocomplete="off" hidden>
             <label for="playerAlias">TU ALIAS</label>
             <input id="playerAlias" name="alias" type="text" maxlength="18" autocomplete="off" spellcheck="false" required placeholder="Tu nombre en el ranking">
@@ -63,6 +64,20 @@
           </form>
           <p id="rankingStatus" role="status" aria-live="polite"></p>
           <ol id="rankingList"></ol>
+        </div>
+        <div class="ideas-panel" id="ideasPanel" role="dialog" aria-modal="true" aria-labelledby="ideasTitle" hidden>
+          <div class="ranking-head"><strong id="ideasTitle">IDEAS PARA EL JUEGO</strong><button id="ideasClose" type="button" aria-label="Cerrar ideas">×</button></div>
+          <p class="ideas-intro">Votá qué debería llegar después. Los votos orientan el desarrollo; las propuestas nuevas se revisan antes de publicarse.</p>
+          <p id="ideasStatus" role="status" aria-live="polite"></p>
+          <div id="ideasList" class="ideas-list"></div>
+          <form id="ideaForm" autocomplete="off" hidden>
+            <strong>PROPONÉ UNA IDEA</strong>
+            <label for="ideaTitle">Título</label>
+            <input id="ideaTitle" name="title" type="text" minlength="6" maxlength="80" required placeholder="Ej.: un nuevo personaje">
+            <label for="ideaDescription">¿Cómo sería en el juego?</label>
+            <textarea id="ideaDescription" name="description" minlength="20" maxlength="500" rows="3" required placeholder="Contá la mecánica, el escenario o el desafío"></textarea>
+            <button type="submit">ENVIAR PROPUESTA</button>
+          </form>
         </div>
         <p class="share-status" id="shareStatus" role="status" aria-live="polite"></p>
         <p class="fullscreen-help" id="fullscreenHelp" hidden>Para jugar sin la barra del navegador, agregá el juego a la pantalla de inicio.</p>
@@ -115,5 +130,6 @@
     <footer>FAN GAME SATÍRICO · <a href="https://github.com/lucasgday/super-milei-bros" target="_blank" rel="noopener noreferrer">CÓDIGO ABIERTO ↗</a> · <a href="https://github.com/lucasgday" target="_blank" rel="noopener noreferrer">LUCASGDAY ↗</a> · SIN AFILIACIÓN OFICIAL</footer>
   </main>
   <script src="./game.js"></script>
+  <script src="./ideas.js"></script>
 </body>
 </html>

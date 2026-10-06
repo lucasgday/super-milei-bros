@@ -468,8 +468,9 @@
   function begin(index = 0) {
     closeRotatePrompt();
     ui.rankingPanel.hidden = true;
+    document.getElementById('ideasPanel').hidden = true;
     ui.shareStatus.textContent = '';
-    score = 0;
+    if (!(index === 1 && levelIndex === 0 && state === 'won')) score = 0;
     lives = 3;
     heroIndex = 0;
     loadLevel(index);
@@ -563,6 +564,7 @@
     scoreSubmitted = false;
     ui.scoreForm.hidden = false;
     ui.rankingPanel.hidden = true;
+    document.getElementById('ideasPanel').hidden = true;
     ui.rankingButton.textContent = '🏆 GUARDAR PUNTAJE';
     ui.rankingStatus.textContent = 'Guardá tu puntaje para aparecer en el ranking.';
     loadRanking();
@@ -570,22 +572,21 @@
   }
 
   async function loadRanking() {
-    const level = levelIndex + 1;
-    ui.rankingTitle.textContent = `RANKING · NIVEL 1-${level}`;
+    ui.rankingTitle.textContent = 'RANKING GLOBAL';
     ui.rankingStatus.textContent = 'Cargando ranking…';
     try {
-      const response = await fetch(`/api/leaderboard?level=${level}`);
+      const response = await fetch('/api/leaderboard');
       if (!response.ok) throw new Error();
       const { ranking } = await response.json();
       ui.rankingPreview.textContent = ranking.length
         ? `TOP 3 · ${ranking.slice(0, 3).map(({ alias, score: points }, index) => `${index + 1}. ${alias} ${Number(points).toLocaleString('es-AR')}`).join('  ·  ')}`
         : 'TOP 3 · TODAVÍA SIN PUNTAJES';
       ui.rankingList.replaceChildren();
-      ranking.forEach(({ alias, score: points }, index) => {
+      ranking.forEach(({ alias, score: points, level }, index) => {
         const row = document.createElement('li');
         const name = document.createElement('span');
         const value = document.createElement('strong');
-        name.textContent = `${index + 1}. ${alias}`;
+        name.textContent = `${index + 1}. ${alias} · 1-${level}`;
         value.textContent = Number(points).toLocaleString('es-AR');
         row.append(name, value);
         ui.rankingList.append(row);
@@ -1297,6 +1298,7 @@
       ctx.save();
       ctx.translate(x + 17, y + 25);
       ctx.rotate(Math.sin(elapsed * 2) * .08);
+      ctx.scale(-1, 1);
       ctx.drawImage(sprites.enemies, 555, 65, 840, 575, -48, -34, 96, 68);
       ctx.restore();
       text('↑', x + 17, y - 11, '#ff8b64', 22, 'center');
@@ -1537,6 +1539,7 @@
   ui.level2Start.addEventListener('click', () => showIntro(1));
   ui.rankingButton.addEventListener('click', () => {
     ui.rankingPanel.hidden = !ui.rankingPanel.hidden;
+    if (!ui.rankingPanel.hidden) document.getElementById('ideasPanel').hidden = true;
     if (!ui.rankingPanel.hidden) loadRanking();
   });
   ui.rankingClose.addEventListener('click', () => { ui.rankingPanel.hidden = true; });
